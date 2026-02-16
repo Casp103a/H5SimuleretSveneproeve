@@ -16,4 +16,8 @@
     <PackageReference Include="Unity.Container" Version="5.11.11" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LogicLibrary\LogicLibrary.csproj" />
+  </ItemGroup>
+
 </Project>
