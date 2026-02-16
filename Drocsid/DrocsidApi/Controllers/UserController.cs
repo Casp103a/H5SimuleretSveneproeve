@@ -29,18 +29,12 @@ namespace DrocsidApi.Controllers
                     return BadRequest("All fields are required.");
                 }
 
-                var user = new UserDto()
-                {
-                    Username = userDto.Username,
-                    Password = userDto.Password,
-                };
-
                 if (string.IsNullOrEmpty(userDto.Password))
                 {
                     return BadRequest();
                 }
 
-                var createdUser = await _userManager.CreateAsync(user);
+                var createdUser = await _userManager.CreateAsync(userDto);
 
                 if (createdUser != null)
                 {
