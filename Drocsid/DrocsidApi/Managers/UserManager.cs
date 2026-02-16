@@ -1,31 +1,41 @@
-﻿using DrocsidApi.Models;
+﻿using LogicLibrary.Dtos;
+using DrocsidApi.Models;
 
 namespace DrocsidApi.Managers
 {
     public interface IUserManager
     {
-        Task<UserModel> CreateAsync(UserModel user, string password);
+        Task<bool?> CreateAsync(UserDto user);
     }
 
     internal class UserManager : IUserManager
     {
-        public async Task<UserModel?> CreateAsync(UserModel userModel, string password)
+        private readonly IDatabaseManager _databaseManager;
+
+        public UserManager(IDatabaseManager databaseManager)
+        {
+            _databaseManager = databaseManager;
+        }
+
+        public async Task<bool?> CreateAsync(UserDto userDto)
         {
             try
             {
-                var user = new UserModel
-                {
-                    Username = userModel.Username,
-                    Password = password,
-                    IsActive = true
-                };
-
-                if (user == null)
+                if (userDto == null || string.IsNullOrEmpty(userDto.Username) || string.IsNullOrEmpty(userDto.Password))
                 {
                     return null;
                 }
 
-                return user;
+                var userModel = new UserModel
+                {
+                    Username = userDto.Username,
+                    Password = userDto.Password,
+                    IsActive = true
+                };
+
+                await _databaseManager.AddUser(userModel);
+
+                return true;
             }
             catch (Exception)
             {

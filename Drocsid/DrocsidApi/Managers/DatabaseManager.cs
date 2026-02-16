@@ -5,12 +5,12 @@ namespace DrocsidApi.Managers
 {
     internal interface IDatabaseManager
     {
-        
+        Task<bool> AddUser(UserModel user);
     }
 
     internal class DatabaseManager : IDatabaseManager
     {
-        private readonly string _connectionString = "Host=localhost;Username=postgres;Password=NogetJegKanHuske;Database=Drocsid"
+        private readonly string _connectionString = "Host=localhost;Username=postgres;Password=NogetJegKanHuske;Database=Drocsid";
         private async Task SetupDatabase()
         {
             if (!await CheckIfUserTableExists())
@@ -46,7 +46,7 @@ namespace DrocsidApi.Managers
             }
         }
 
-        public async Task AddUser(UserModel user)
+        public async Task<bool> AddUser(UserModel user)
         {
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
             var dataSource = dataSourceBuilder.Build();
@@ -58,7 +58,15 @@ namespace DrocsidApi.Managers
                 cmd.Parameters.AddWithValue("username", user.Username);
                 cmd.Parameters.AddWithValue("password", user.Password);
                 cmd.Parameters.AddWithValue("isActive", user.IsActive);
-                await cmd.ExecuteNonQueryAsync();
+                var result = await cmd.ExecuteNonQueryAsync();
+                if (result > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
     }
