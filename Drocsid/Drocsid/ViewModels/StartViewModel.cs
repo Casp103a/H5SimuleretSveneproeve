@@ -1,5 +1,4 @@
-﻿
-namespace Drocsid.ViewModels
+﻿namespace Drocsid.ViewModels
 {
     internal class StartViewModel : BindableBase, INavigationAware
     {

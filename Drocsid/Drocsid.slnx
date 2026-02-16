@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="Drocsid/Drocsid.csproj" />
+  <Project Path="DrocsidApi/DrocsidApi.csproj" Id="958aa6f7-7d4c-45cb-9c62-e45d997fe3df" />
+  <Project Path="LogicLibrary/LogicLibrary.csproj" Id="8fa0b364-f042-40a5-9e0f-099dd12f55dd" />
 </Solution>
