@@ -4,9 +4,31 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Drocsid.Views"
+             xmlns:prism="http://prismlibrary.com/"
+             prism:ViewModelLocator.AutoWireViewModel="True"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-            
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="1">
+            <Label Content="Username"/>
+            <TextBox Text="{Binding Username}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Grid.Row="1">
+            <Label Content="Password"/>
+            <TextBox Text="{Binding Password}"/>
+        </StackPanel>
+        <CheckBox Content="Remember me" Grid.Column="1" Grid.Row="1" VerticalAlignment="Bottom" IsChecked="{Binding RememberMe}"/>
+        <Button Content="Login" Grid.Column="1" Grid.Row="2" Command="{Binding LoginCommand}"/>
+        <Button Content="Create account" Grid.Column="2" Grid.Row="2" Command="{Binding RegisterUserCommand}"/>
     </Grid>
 </UserControl>
