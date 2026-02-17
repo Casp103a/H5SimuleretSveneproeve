@@ -1,4 +1,5 @@
 ﻿using Drocsid.Views;
+using LogicLibrary.Services;
 using System.Windows;
 
 namespace Drocsid
@@ -18,6 +19,9 @@ namespace Drocsid
         protected override void RegisterTypes(IContainerRegistry container)
         {
             container.RegisterForNavigation<StartView>(nameof(StartView));
+            container.RegisterForNavigation<RegisterUserView>(nameof(RegisterUserView));
+
+            container.RegisterScoped<IHttpClientService, HttpClientService>();
         }
     }
 }
