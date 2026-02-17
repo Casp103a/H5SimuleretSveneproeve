@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using LogicLibrary.Dtos;
+﻿using DrocsidApi.Managers;
 using DrocsidApi.Models;
-using DrocsidApi.Managers;
+using DrocsidApi.Services;
+using LogicLibrary.Dtos;
+using LogicLibrary.Models;
+using LogicLibrary.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DrocsidApi.Controllers
 {
@@ -10,14 +13,21 @@ namespace DrocsidApi.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserManager _userManager;
-
-        public UserController(IUserManager userManager)
+        private readonly IDatabaseManager _databaseManager;
+        private readonly PasswordService passwordService;
+        private readonly ITokenService tokenService;
+        private readonly IRefreshTokenManager refreshTokenManager;
+        public UserController(IUserManager userManager, IDatabaseManager databaseManager, ITokenService tokenService, IRefreshTokenManager refreshTokenManager, PasswordService passwordService)
         {
             _userManager = userManager;
+            _databaseManager = databaseManager;
+            this.tokenService = tokenService;
+            this.refreshTokenManager = refreshTokenManager;
+            this.passwordService = passwordService;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserDto userDto)
+        public async Task<IActionResult> Register([FromBody] LoginRegisterUserDto userDto)
         {
             try
             {
@@ -47,6 +57,49 @@ namespace DrocsidApi.Controllers
             {
                 return StatusCode(500, ex);
             }
+        }
+
+        [HttpGet("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRegisterUserDto userDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = _userManager.CheckPasswordSignInAsync(userDto, passwordService.DecodePassword(userDto.Password));
+            if (!result.Result) return Unauthorized("Username not found and/or password incorrect");
+
+            var user = await _databaseManager.GetUser(userDto.Username);
+
+            var token = tokenService.CreateToken(user, out Guid id);
+
+            var refreshToken = new RefreshTokens()
+            {
+                ID = id,
+                RefreshToken = tokenService.CreateRefreshToken(),
+                RefreshTokenExpiry = DateTime.Now.AddHours(2),
+                RefreshTokenIsUsed = false,
+                UserId = user.Id,
+            };
+
+            bool refreshTokenSaved = await refreshTokenManager.Add(refreshToken);
+
+            if (!refreshTokenSaved)
+            {
+                return StatusCode(500, "Failed while saving");
+            }
+
+            user.RefreshTokenId = refreshToken.ID.ToString();
+            var savedUser = await _userManager.UpdateAsync(user);
+
+            if (savedUser == null)
+            {
+                return StatusCode(500, "Failed while saving");
+            }
+
+            return Ok(new LoginTokens
+            {
+                Token = token
+            });
         }
     }
 }
