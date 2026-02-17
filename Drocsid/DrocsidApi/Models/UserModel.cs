@@ -12,5 +12,6 @@ namespace DrocsidApi.Models
         public string? Password { get; set; }
         [Required]
         public bool IsActive { get; set; }
+        public string? RefreshTokenId { get; set; }
     }
 }
