@@ -19,7 +19,7 @@ namespace DrocsidApi.Managers
 
     internal class DatabaseManager : IDatabaseManager
     {
-        private readonly string _connectionString = "Host=localhost;Username=postgres;Password=NogetJegKanHuske;Database=Drocsid";
+        private readonly string _connectionString = "Host=postgres;Username=Flemming;Password=NogetJegKanHuske;Database=drocsid";
 
         public DatabaseManager()
         {
