@@ -9,25 +9,28 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
-        <Button Content="Back" Command="{Binding BackCommand}"/>
-        <StackPanel Grid.Column="1">
-            <Label Content="Username"/>
-            <TextBox Text="{Binding Username}"/>
-        </StackPanel>
-        <StackPanel Grid.Column="1" Grid.Row="1">
-            <Label Content="Password"/>
-            <TextBox Text="{Binding Password}"/>
-        </StackPanel>
-        <Button Content="Register" Grid.Column="1" Grid.Row="2" Command="{Binding RegisterUserCommand}"/>
+        <Border Style="{StaticResource CardPanel}" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center">
+            <StackPanel Style="{StaticResource FormContainer}">
+                <TextBlock Text="Create Account" Style="{StaticResource TitleText}" HorizontalAlignment="Center"/>
+
+                <Label Content="Username"/>
+                <TextBox Text="{Binding Username}" MinWidth="200"/>
+
+                <Label Content="Password" Margin="0,16,0,0"/>
+                <PasswordBox x:Name="PasswordBox" MinWidth="200"/>
+
+                <Button Content="Register" 
+                        Command="{Binding RegisterUserCommand}" 
+                        Margin="0,24,0,8" 
+                        MinWidth="300"/>
+                <Button Content="Back" 
+                        Command="{Binding BackCommand}" 
+                        Style="{StaticResource SecondaryButton}"
+                        Margin="0,5,0,8" 
+                        MinWidth="300"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>
