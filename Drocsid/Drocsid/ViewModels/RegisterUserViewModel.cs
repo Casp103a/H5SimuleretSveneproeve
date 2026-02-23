@@ -11,11 +11,13 @@ namespace Drocsid.ViewModels
     {
         private readonly IRegionManager regionManager;
         private readonly IHttpClientService httpClientService;
+        private readonly IPasswordService passwordService;
 
-        public RegisterUserViewModel(IRegionManager regionManager, IHttpClientService httpClientService)
+        public RegisterUserViewModel(IRegionManager regionManager, IHttpClientService httpClientService, IPasswordService passwordService)
         {
             this.regionManager = regionManager;
             this.httpClientService = httpClientService;
+            this.passwordService = passwordService;
 
             RegisterUserCommand = new DelegateCommand(RegisterUser);
             BackCommand = new DelegateCommand(Back);
@@ -51,7 +53,7 @@ namespace Drocsid.ViewModels
             string url = "http://192.168.10.25:8080/api/user/register";
             var user = new LoginRegisterUserDto()
             {
-                Password = Password.ToString(),
+                Password = passwordService.EncodePassword(Password),
                 Username = Username,
             };
             var json = JsonSerializer.Serialize(user);
@@ -61,6 +63,7 @@ namespace Drocsid.ViewModels
             if (result.IsSuccessStatusCode)
             {
                 //Navigate to overview for chats.
+                regionManager.RequestNavigate("main", nameof(ChatOverviewView));
             }
             else
             {

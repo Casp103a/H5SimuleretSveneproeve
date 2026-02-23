@@ -1,0 +1,50 @@
+﻿using Drocsid.Dialogs.Views;
+using Drocsid.Views;
+
+namespace Drocsid.ViewModels
+{
+    internal class ChatOverviewViewModel : BindableBase, INavigationAware
+    {
+        private readonly IRegionManager regionManager;
+        private readonly IDialogService dialogService;
+
+        public ChatOverviewViewModel(IRegionManager regionManager, IDialogService dialogService)
+        {
+            this.regionManager = regionManager;
+            this.dialogService = dialogService;
+
+            AddFriendCommand = new(AddFriend);
+            LogoutCommand = new(Logout);
+        }
+
+        public DelegateCommand AddFriendCommand { get; }
+        public DelegateCommand LogoutCommand { get; }
+
+        private void Logout()
+        {
+            regionManager.RequestNavigate("main", nameof(StartView));
+        }
+
+        private void AddFriend()
+        {
+            dialogService.Show(nameof(AddFriendDialog));
+        }
+
+        #region Navigation
+        public bool IsNavigationTarget(NavigationContext navigationContext)
+        {
+            return true;
+        }
+
+        public void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+
+        }
+
+        public void OnNavigatedTo(NavigationContext navigationContext)
+        {
+
+        }
+        #endregion
+    }
+}
