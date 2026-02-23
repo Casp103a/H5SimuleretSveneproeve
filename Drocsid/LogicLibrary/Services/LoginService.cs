@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace LogicLibrary.Services
 {
-    internal interface ILoginService
+    public interface ILoginService
     {
         Task<(bool, string)> Login(LoginRegisterUserDto login);
     }
@@ -35,7 +35,7 @@ namespace LogicLibrary.Services
 
             try
             {
-                var response = await client.PostAsync(applicationSpecific.BaseUrl + "/api/login", stringContent);
+                var response = await client.PostAsync(applicationSpecific.BaseUrl + "/api/user/login", stringContent);
                 if (response.IsSuccessStatusCode)
                 {
                     string content = await response.Content.ReadAsStringAsync();

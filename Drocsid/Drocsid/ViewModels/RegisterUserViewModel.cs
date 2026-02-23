@@ -48,15 +48,25 @@ namespace Drocsid.ViewModels
 
         private void RegisterUser()
         {
-            string url = "https://192.168.10.139:7257/api/user/register";
-            var user = new UserDto()
+            string url = "http://192.168.10.25:8080/api/user/register";
+            var user = new LoginRegisterUserDto()
             {
-                Password = password,
-                Username = username,
+                Password = Password.ToString(),
+                Username = Username,
             };
             var json = JsonSerializer.Serialize(user);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var result = httpClientService.PostAsync(url, content).Result;
+
+            if (result.IsSuccessStatusCode)
+            {
+                //Navigate to overview for chats.
+            }
+            else
+            {
+                //Display the error
+                var error = result.Content.ReadAsStringAsync().Result;
+            }
         }
 
         private void Back()

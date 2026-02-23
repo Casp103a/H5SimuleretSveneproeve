@@ -1,6 +1,7 @@
 ﻿using DrocsidApi.Models;
 using LogicLibrary.Dtos;
 using Npgsql;
+using System.Diagnostics;
 
 namespace DrocsidApi.Managers
 {
@@ -19,11 +20,13 @@ namespace DrocsidApi.Managers
 
     internal class DatabaseManager : IDatabaseManager
     {
-        private readonly string _connectionString = "Host=postgres;Username=Flemming;Password=NogetJegKanHuske;Database=drocsid";
+        private readonly string _connectionString = "Host=drocsid-db;Port=5432;Username=Flemming;Password=NogetJegKanHuske;Database=drocsid";
 
         public DatabaseManager()
         {
+            Trace.WriteLine("Database manager ctor");
             SetupDatabase().Wait();
+            Trace.WriteLine("Setup database");
         }
 
         private async Task SetupDatabase()
@@ -45,9 +48,11 @@ namespace DrocsidApi.Managers
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
             var dataSource = dataSourceBuilder.Build();
 
-            var conn = await dataSource.OpenConnectionAsync();
+            await using var data = NpgsqlDataSource.Create(_connectionString);
+            Trace.WriteLine("Trying to connect to check if exist table: User");
+            //var conn = await dataSource.OpenConnectionAsync();
 
-            await using (var cmd = new NpgsqlCommand("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')", conn))
+            await using (var cmd = data.CreateCommand("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')"))
             {
                 var result = await cmd.ExecuteScalarAsync();
                 return result != null && (bool)result;
@@ -58,7 +63,7 @@ namespace DrocsidApi.Managers
         {
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(_connectionString);
             var dataSource = dataSourceBuilder.Build();
-
+            Trace.WriteLine("Trying to connect to create table: User");
             var conn = await dataSource.OpenConnectionAsync();
 
             await using (var cmd = new NpgsqlCommand("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username TEXT NOT NULL, password TEXT NOT NULL, isActive BOOLEAN NOT NULL)", conn))
@@ -176,7 +181,7 @@ namespace DrocsidApi.Managers
 
             var conn = await dataSource.OpenConnectionAsync();
 
-            await using (var cmd = new NpgsqlCommand("CREATE TABLE IF NOT EXISTS refreshtokens (id SERIAL PRIMARY KEY, userId TEXT NOT NULL, token TEXT NOT NULL, expires TIMESTAMP NOT NULL, hasBeenUsed BOOLEAN NOT NULL)", conn))
+            await using (var cmd = new NpgsqlCommand("CREATE TABLE IF NOT EXISTS refreshtokens (id TEXT PRIMARY KEY, userId TEXT NOT NULL, token TEXT NOT NULL, expires TIMESTAMP NOT NULL, hasBeenUsed BOOLEAN NOT NULL)", conn))
             {
                 await cmd.ExecuteNonQueryAsync();
             }

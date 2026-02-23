@@ -19,7 +19,7 @@
                 <TextBox Text="{Binding Username}" MinWidth="200"/>
 
                 <Label Content="Password" Margin="0,16,0,0"/>
-                <PasswordBox x:Name="PasswordBox" MinWidth="200"/>
+                <TextBox x:Name="PasswordBox" MinWidth="200" Text="{Binding Password}"/>
 
                 <Button Content="Register" 
                         Command="{Binding RegisterUserCommand}" 

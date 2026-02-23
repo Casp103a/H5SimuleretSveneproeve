@@ -1,4 +1,5 @@
 ﻿using Drocsid.Views;
+using LogicLibrary.Interface;
 using LogicLibrary.Services;
 using System.Windows;
 
@@ -22,6 +23,9 @@ namespace Drocsid
             container.RegisterForNavigation<RegisterUserView>(nameof(RegisterUserView));
 
             container.RegisterScoped<IHttpClientService, HttpClientService>();
+            container.RegisterScoped<IApplicationSpecific, ApplicationSpecific>();
+            container.RegisterScoped<ILoginService, LoginService>();
+            container.RegisterScoped<IPasswordService, PasswordService>();
         }
     }
 }
