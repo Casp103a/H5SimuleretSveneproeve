@@ -51,7 +51,7 @@ namespace Drocsid.ViewModels
             string url = "http://192.168.10.25:8080/api/user/register";
             var user = new LoginRegisterUserDto()
             {
-                Password = Password.ToString(),
+                Password = Password,
                 Username = Username,
             };
             var json = JsonSerializer.Serialize(user);
