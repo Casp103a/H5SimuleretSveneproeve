@@ -59,7 +59,7 @@ namespace DrocsidApi.Controllers
             }
         }
 
-        [HttpGet("login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRegisterUserDto userDto)
         {
             if (!ModelState.IsValid)

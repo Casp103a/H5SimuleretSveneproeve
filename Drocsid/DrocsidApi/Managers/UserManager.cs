@@ -14,11 +14,11 @@ namespace DrocsidApi.Managers
 
     internal class UserManager : IUserManager
     {
-        private readonly IDatabaseManager _databaseManager;
+        private readonly IDatabaseManager databaseManager;
 
         public UserManager(IDatabaseManager databaseManager)
         {
-            _databaseManager = databaseManager;
+            this.databaseManager = databaseManager;
         }
 
         public async Task<bool?> CreateAsync(LoginRegisterUserDto userDto)
@@ -30,6 +30,13 @@ namespace DrocsidApi.Managers
                     return null;
                 }
 
+                var doesUserExist = await databaseManager.GetUser(userDto.Username);
+                
+                if(doesUserExist != null)
+                {
+                    return false;
+                }
+
                 var userModel = new UserModel
                 {
                     Username = userDto.Username,
@@ -37,7 +44,7 @@ namespace DrocsidApi.Managers
                     IsActive = true
                 };
 
-                await _databaseManager.AddUser(userModel);
+                await databaseManager.AddUser(userModel);
 
                 return true;
             }
@@ -56,7 +63,7 @@ namespace DrocsidApi.Managers
                     return null;
                 }
                 
-                await _databaseManager.UpdateUser(user);
+                await databaseManager.UpdateUser(user);
                 return true;
             }
             catch (Exception)
@@ -69,7 +76,7 @@ namespace DrocsidApi.Managers
         {
             try
             {
-                await _databaseManager.DeleteUser(user.Id);
+                await databaseManager.DeleteUser(user.Id);
                 return true;
             }
             catch (Exception)
@@ -82,7 +89,7 @@ namespace DrocsidApi.Managers
         {
             try
             {
-                return await _databaseManager.GetAllUsers();
+                return await databaseManager.GetAllUsers();
             }
             catch (Exception)
             {
@@ -94,7 +101,7 @@ namespace DrocsidApi.Managers
         {
             try
             {
-                var user = await _databaseManager.GetUser(login.Username);
+                var user = await databaseManager.GetUser(login.Username);
                 if (user == null) return false;
                 return user.Password == password;
             }

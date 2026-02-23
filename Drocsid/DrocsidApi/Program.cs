@@ -1,3 +1,8 @@
+using DrocsidApi.Managers;
+using DrocsidApi.Services;
+using LogicLibrary.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DrocsidApi
 {
@@ -14,6 +19,33 @@ namespace DrocsidApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddAuthentication(option =>
+            {
+                option.DefaultAuthenticateScheme =
+                option.DefaultChallengeScheme =
+                option.DefaultForbidScheme =
+                option.DefaultScheme =
+                option.DefaultSignInScheme =
+                option.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(option =>
+            {
+                option.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = builder.Configuration["JWT:Issuer"],
+                    ValidateAudience = false,
+                    ValidateIssuerSigningKey = true,
+                    ClockSkew = new TimeSpan(0),
+                    IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"]))
+                };
+            });
+
+            builder.Services.AddSingleton<IDatabaseManager, DatabaseManager>();
+            builder.Services.AddScoped<IRefreshTokenManager, RefreshTokenManager>();
+            builder.Services.AddScoped<IUserManager, UserManager>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
+            builder.Services.AddScoped<PasswordService>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -23,7 +55,7 @@ namespace DrocsidApi
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseAuthorization();
 

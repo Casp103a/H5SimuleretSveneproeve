@@ -1,4 +1,6 @@
-﻿using Drocsid.Views;
+﻿using Drocsid.Dialogs.Views;
+using Drocsid.Views;
+using LogicLibrary.Interface;
 using LogicLibrary.Services;
 using System.Windows;
 
@@ -20,8 +22,14 @@ namespace Drocsid
         {
             container.RegisterForNavigation<StartView>(nameof(StartView));
             container.RegisterForNavigation<RegisterUserView>(nameof(RegisterUserView));
+            container.RegisterForNavigation<ChatOverviewView>(nameof(ChatOverviewView));
+
+            container.RegisterDialog<AddFriendDialog>(nameof(AddFriendDialog));
 
             container.RegisterScoped<IHttpClientService, HttpClientService>();
+            container.RegisterScoped<IApplicationSpecific, ApplicationSpecific>();
+            container.RegisterScoped<ILoginService, LoginService>();
+            container.RegisterScoped<IPasswordService, PasswordService>();
         }
     }
 }

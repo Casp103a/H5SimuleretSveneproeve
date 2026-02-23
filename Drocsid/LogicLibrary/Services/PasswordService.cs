@@ -2,7 +2,13 @@
 
 namespace LogicLibrary.Services
 {
-    public class PasswordService
+    public interface IPasswordService
+    {
+        string EncodePassword(string password);
+        string DecodePassword(string? password);
+    }
+
+    public class PasswordService : IPasswordService
     {
         public string EncodePassword(string password)
         {
