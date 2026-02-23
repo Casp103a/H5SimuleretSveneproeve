@@ -4,31 +4,41 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Drocsid.Views"
+             xmlns:helpers="clr-namespace:Drocsid.Helpers"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="1">
-            <Label Content="Username"/>
-            <TextBox Text="{Binding Username}"/>
-        </StackPanel>
-        <StackPanel Grid.Column="1" Grid.Row="1">
-            <Label Content="Password"/>
-            <TextBox Text="{Binding Password}"/>
-        </StackPanel>
-        <CheckBox Content="Remember me" Grid.Column="1" Grid.Row="1" VerticalAlignment="Bottom" IsChecked="{Binding RememberMe}"/>
-        <Button Content="Login" Grid.Column="1" Grid.Row="2" Command="{Binding LoginCommand}"/>
-        <Button Content="Create account" Grid.Column="2" Grid.Row="2" Command="{Binding RegisterUserCommand}"/>
+        <Border Style="{StaticResource CardPanel}" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center">
+            <StackPanel Style="{StaticResource FormContainer}">
+                <TextBlock Text="Welcome Back" Style="{StaticResource TitleText}" HorizontalAlignment="Center"/>
+                
+                <Label Content="Username"/>
+                <TextBox Text="{Binding Username}" MinWidth="300"/>
+                
+                <Label Content="Password" Margin="0,16,0,0"/>
+                <PasswordBox helpers:PasswordBoxHelper.BindPassword="True"
+                           helpers:PasswordBoxHelper.BoundPassword="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                           MinWidth="300"/>
+                
+                <CheckBox Content="Remember me" 
+                         IsChecked="{Binding RememberMe}" 
+                         Margin="0,16,0,0"/>
+                
+                <Button Content="Login" 
+                        Command="{Binding LoginCommand}" 
+                        Margin="0,24,0,8" 
+                        MinWidth="300"/>
+                
+                <Button Content="Create account" 
+                        Command="{Binding RegisterUserCommand}" 
+                        Style="{StaticResource SecondaryButton}" 
+                        Margin="0,5,0,8" 
+                        MinWidth="300"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

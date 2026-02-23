@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Drocsid.Views"
+             xmlns:helpers="clr-namespace:Drocsid.Helpers"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True"
              mc:Ignorable="d" 
@@ -14,20 +15,23 @@
                 VerticalAlignment="Center">
             <StackPanel Style="{StaticResource FormContainer}">
                 <TextBlock Text="Create Account" Style="{StaticResource TitleText}" HorizontalAlignment="Center"/>
-
+                
                 <Label Content="Username"/>
                 <TextBox Text="{Binding Username}" MinWidth="200"/>
-
+                
                 <Label Content="Password" Margin="0,16,0,0"/>
-                <TextBox x:Name="PasswordBox" MinWidth="200" Text="{Binding Password}"/>
-
+                <PasswordBox helpers:PasswordBoxHelper.BindPassword="True"
+                           helpers:PasswordBoxHelper.BoundPassword="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                           MinWidth="200"/>
+                
                 <Button Content="Register" 
                         Command="{Binding RegisterUserCommand}" 
                         Margin="0,24,0,8" 
                         MinWidth="300"/>
+                
                 <Button Content="Back" 
                         Command="{Binding BackCommand}" 
-                        Style="{StaticResource SecondaryButton}"
+                        Style="{StaticResource SecondaryButton}" 
                         Margin="0,5,0,8" 
                         MinWidth="300"/>
             </StackPanel>
