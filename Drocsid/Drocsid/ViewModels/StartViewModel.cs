@@ -69,6 +69,7 @@ namespace Drocsid.ViewModels
             if (result)
             {
                 //Navigate to overview of chats
+                regionManager.RequestNavigate("main", nameof(ChatOverviewView));
             }
             else
             {
