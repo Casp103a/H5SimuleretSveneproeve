@@ -10,10 +10,23 @@ namespace DrocsidApi.Managers
         Task<bool> DeleteUser(int userId);
         Task<List<UserModel>> GetAllUsers();
         Task<UserModel?> GetUser(string username);
+        Task<UserModel?> GetUser(int id);
+
         Task<List<RefreshTokens>> GetAllRefreshTokens();
         Task<bool> RemoveRefreshToken(Guid refreshTokenId);
         Task<bool> AddRefreshToken(RefreshTokens refreshToken);
         Task<bool> UpdateRefreshToken(Guid TokenId, bool HasBeenUsed);
+
+        Task<bool> AddFriendRequest(FriendRequestModel friendRequest);
+        Task<bool> RemoveFriendRequest(FriendRequestModel friendRequest);
+        Task<List<FriendRequestModel>> GetAllFriendRequests();
+        Task<List<FriendRequestModel>> GetUsersFriendRequests(int userId);
+
+        Task<bool> AddFriend(FriendModel friendModel);
+        Task<bool> RemoveFriend(FriendModel friendModel);
+        Task<FriendModel?> GetFriendByUserIds(int user1Id, int user2Id);
+        Task<FriendModel?> GetFriendById(int id);
+        Task<List<FriendModel>> FindUsersFriends(int userId);
     }
 
     internal class DatabaseManager : IDatabaseManager
@@ -28,19 +41,16 @@ namespace DrocsidApi.Managers
         private async Task SetupDatabase()
         {
             if (!await CheckIfUserTableExists())
-            {
                 await CreateUserTable();
-            }
 
             if (!await CheckIfRefreshTokenTableExists())
-            {
                 await CreateRefreshTokenTable();
-            }
 
             if (!await CheckIfFriendRequestTableExists())
-            {
                 await CreateFriendRequestTable();
-            }
+
+            if (!await CheckIfFriendsTableExists())
+                await CreateFriendsTable();
         }
 
         private async Task<bool> CheckIfUserTableExists()
@@ -135,6 +145,30 @@ namespace DrocsidApi.Managers
             await using (var cmd = data.CreateCommand("SELECT id, username, password, isActive FROM users WHERE username = @username"))
             {
                 cmd.Parameters.AddWithValue("username", username);
+                var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    return new UserModel
+                    {
+                        Id = reader.GetInt32(0),
+                        Username = reader.GetString(1),
+                        Password = reader.GetString(2),
+                        IsActive = reader.GetBoolean(3)
+                    };
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        public async Task<UserModel?> GetUser(int id)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, username, password, isActive FROM users WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", id);
                 var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
@@ -250,6 +284,202 @@ namespace DrocsidApi.Managers
             {
                 await cmd.ExecuteNonQueryAsync();
             }
+        }
+
+        public async Task<bool> AddFriendRequest(FriendRequestModel friendRequest)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("INSERT INTO friendrequests (senderId, senderUsername, receiverId, receiverUsername) VALUES (@senderId, @senderUsername, @receiverId, @receiverUsername)"))
+            {
+                cmd.Parameters.AddWithValue("senderId", friendRequest.SenderId);
+                cmd.Parameters.AddWithValue("senderUsername", friendRequest.SenderUsername);
+                cmd.Parameters.AddWithValue("receiverId", friendRequest.ReceiverId);
+                cmd.Parameters.AddWithValue("receiverUsername", friendRequest.ReceiverUsername);
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+
+        public async Task<bool> RemoveFriendRequest(FriendRequestModel friendRequest)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("DELETE FROM friendrequests WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", friendRequest.SenderId);
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+
+        public async Task<List<FriendRequestModel>> GetAllFriendRequests()
+        {
+            List<FriendRequestModel> friendRequests = [];
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, senderId, senderUsername, receiverId, receiverUsername FROM friendrequests"))
+            {
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    friendRequests.Add(new FriendRequestModel
+                    {
+                        Id = reader.GetInt32(0),
+                        SenderId = reader.GetInt32(1),
+                        SenderUsername = reader.GetString(2),
+                        ReceiverId = reader.GetInt32(3),
+                        ReceiverUsername = reader.GetString(4)
+                    });
+                }
+            }
+            return friendRequests;
+        }
+
+        public async Task<List<FriendRequestModel>> GetUsersFriendRequests(int userId)
+        {
+            List<FriendRequestModel> friendRequests = [];
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, senderId, senderUsername, receiverId, receiverUsername FROM friendrequests WHERE receiverId = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", userId);
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    friendRequests.Add(new FriendRequestModel
+                    {
+                        Id = reader.GetInt32(0),
+                        SenderId = reader.GetInt32(1),
+                        SenderUsername = reader.GetString(2),
+                        ReceiverId = reader.GetInt32(3),
+                        ReceiverUsername = reader.GetString(4)
+                    });
+                }
+            }
+            return friendRequests;
+        }
+
+        private async Task<bool> CheckIfFriendsTableExists()
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'friends')"))
+            {
+                var result = await cmd.ExecuteScalarAsync();
+                return result != null && (bool)result;
+            }
+        }
+
+        private async Task CreateFriendsTable()
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS friends (id SERIAL PRIMARY KEY, user1Id INT NOT NULL, user2Id INT NOT NULL)"))
+            {
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+
+        public async Task<bool> AddFriend(FriendModel friendModel)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("INSERT INTO friends (user1Id, user2Id) VALUES (@user1Id, @user2Id)"))
+            {
+                cmd.Parameters.AddWithValue("senderId", friendModel.User1Id);
+                cmd.Parameters.AddWithValue("senderUsername", friendModel.User2Id);
+
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+        
+        public async Task<bool> RemoveFriend(FriendModel friendModel)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("DELETE FROM friends WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", friendModel.Id);
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+
+        public async Task<FriendModel?> GetFriendByUserNames(int user1Id, int user2Id)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, user1Id, user2Id FROM friends WHERE user1Id = @user1Id AND user2Id = @user2Id"))
+            {
+                cmd.Parameters.AddWithValue("user1Id", user1Id);
+                cmd.Parameters.AddWithValue("user2Id", user2Id);
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    return new FriendModel
+                    {
+                        Id = reader.GetInt32(0),
+                        User1Id = reader.GetInt32(1),
+                        User2Id = reader.GetInt32(2)
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        public async Task<FriendModel?> GetFriendById(int id)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, user1Id, user2Id FROM friends WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", id);
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    return new FriendModel
+                    {
+                        Id = reader.GetInt32(0),
+                        User1Id = reader.GetInt32(1),
+                        User2Id = reader.GetInt32(2)
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        public async Task<List<FriendModel>> FindUsersFriends(int userId)
+        {
+            List<FriendModel> friends = [];
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, user1Id, user2Id FROM friends WHERE user1Id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", userId);
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    friends.Add(new FriendModel
+                    {
+                        Id = reader.GetInt32(0),
+                        User1Id = reader.GetInt32(1),
+                        User2Id= reader.GetInt32(2)
+                    });
+                }
+            }
+
+            await using (var cmd = data.CreateCommand("SELECT id, user1Id, user2Id FROM friends WHERE user2Id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", userId);
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    friends.Add(new FriendModel
+                    {
+                        Id = reader.GetInt32(0),
+                        User1Id = reader.GetInt32(1),
+                        User2Id = reader.GetInt32(2)
+                    });
+                }
+            }
+
+            return friends;
         }
     }
 }
