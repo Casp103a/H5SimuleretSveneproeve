@@ -1,6 +1,5 @@
 ﻿using DrocsidApi.Models;
 using LogicLibrary.Dtos;
-using Npgsql.Replication;
 
 namespace DrocsidApi.Managers
 {
@@ -34,7 +33,7 @@ namespace DrocsidApi.Managers
             return databaseManager.AddFriendRequest(friendModel);
         }
 
-        public Task<bool> RemoveFriendRequest(FriendRequestDto friendRequest)
+        public async Task<bool> RemoveFriendRequest(FriendRequestDto friendRequest)
         {
             var friendModel = new FriendRequestModel()
             {
@@ -45,7 +44,7 @@ namespace DrocsidApi.Managers
                 ReceiverUsername = friendRequest.ReceiverUsername
             };
 
-            return databaseManager.RemoveFriendRequest(friendModel);
+            return await databaseManager.RemoveFriendRequest(friendModel);
         }
 
         public async Task<List<FriendRequestDto>> GetAllFriendRequests()

@@ -14,10 +14,10 @@ namespace DrocsidApi.Controllers
     {
         private readonly IUserManager _userManager;
         private readonly IDatabaseManager _databaseManager;
-        private readonly PasswordService passwordService;
+        private readonly IPasswordService passwordService;
         private readonly ITokenService tokenService;
         private readonly IRefreshTokenManager refreshTokenManager;
-        public UserController(IUserManager userManager, IDatabaseManager databaseManager, ITokenService tokenService, IRefreshTokenManager refreshTokenManager, PasswordService passwordService)
+        public UserController(IUserManager userManager, IDatabaseManager databaseManager, ITokenService tokenService, IRefreshTokenManager refreshTokenManager, IPasswordService passwordService)
         {
             _userManager = userManager;
             _databaseManager = databaseManager;

@@ -1,5 +1,6 @@
 ﻿using LogicLibrary.Dtos;
 using DrocsidApi.Models;
+using LogicLibrary.Services;
 
 namespace DrocsidApi.Managers
 {
@@ -17,10 +18,12 @@ namespace DrocsidApi.Managers
     internal class UserManager : IUserManager
     {
         private readonly IDatabaseManager databaseManager;
+        private readonly IPasswordService passwordService;
 
-        public UserManager(IDatabaseManager databaseManager)
+        public UserManager(IDatabaseManager databaseManager, IPasswordService passwordService)
         {
             this.databaseManager = databaseManager;
+            this.passwordService = passwordService;
         }
 
         public async Task<bool?> CreateAsync(LoginRegisterUserDto userDto)
@@ -105,7 +108,7 @@ namespace DrocsidApi.Managers
             {
                 var user = await databaseManager.GetUser(login.Username!);
                 if (user == null) return false;
-                return user.Password == password;
+                return passwordService.DecodePassword(user.Password) == password;
             }
             catch (Exception)
             {

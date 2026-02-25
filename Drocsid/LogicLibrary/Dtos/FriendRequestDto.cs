@@ -1,9 +1,16 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace LogicLibrary.Dtos
 {
     public class FriendRequestDto
     {
+        [JsonConstructor]
+        private FriendRequestDto()
+        {
+            
+        }
+
         public FriendRequestDto(int senderId, string senderUsername, int receiverId, string receiverUsername)
         {
             SenderId = senderId;

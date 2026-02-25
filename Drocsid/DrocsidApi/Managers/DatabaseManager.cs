@@ -305,7 +305,7 @@ namespace DrocsidApi.Managers
             await using var data = NpgsqlDataSource.Create(connectionString);
             await using (var cmd = data.CreateCommand("DELETE FROM friendrequests WHERE id = @id"))
             {
-                cmd.Parameters.AddWithValue("id", friendRequest.SenderId);
+                cmd.Parameters.AddWithValue("id", friendRequest.Id);
                 var result = await cmd.ExecuteNonQueryAsync();
                 return result > 0;
             }
@@ -382,8 +382,8 @@ namespace DrocsidApi.Managers
             await using var data = NpgsqlDataSource.Create(connectionString);
             await using (var cmd = data.CreateCommand("INSERT INTO friends (user1Id, user2Id) VALUES (@user1Id, @user2Id)"))
             {
-                cmd.Parameters.AddWithValue("senderId", friendModel.User1Id);
-                cmd.Parameters.AddWithValue("senderUsername", friendModel.User2Id);
+                cmd.Parameters.AddWithValue("user1Id", friendModel.User1Id);
+                cmd.Parameters.AddWithValue("user2Id", friendModel.User2Id);
 
                 var result = await cmd.ExecuteNonQueryAsync();
                 return result > 0;

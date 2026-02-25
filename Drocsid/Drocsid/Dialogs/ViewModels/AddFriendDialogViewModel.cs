@@ -1,9 +1,19 @@
-﻿namespace Drocsid.Dialogs.ViewModels
+﻿using LogicLibrary.Dtos;
+using LogicLibrary.Services;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+
+namespace Drocsid.Dialogs.ViewModels
 {
     internal class AddFriendDialogViewModel : BindableBase, IDialogAware
     {
-        public AddFriendDialogViewModel()
+        private readonly IHttpClientService httpClientService;
+
+        public AddFriendDialogViewModel(IHttpClientService httpClientService)
         {
+            this.httpClientService = httpClientService;
+
             CloseCommand = new DelegateCommand(Close);
             AddFriendCommand = new DelegateCommand(AddFriend);
         }
@@ -41,11 +51,27 @@
 
         private void AddFriend()
         {
-            bool added = false;
-            //If friend added
+            string url = "http://192.168.10.25:8080/api/friend/Create";
 
-            if (added)
+            var dto = new AddFriendRequestDto()
+            {
+                SenderId = 8, // TODO: need to be change to get the active users id
+                ReceiverUsername = usernameToAdd,
+            };
+
+            var json = JsonSerializer.Serialize(dto);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var result = httpClientService.PostAsync(url, content).Result;
+
+            if (result.IsSuccessStatusCode)
+            {
                 RequestClose.Invoke();
+            }
+            else
+            {
+                // Display the error
+                var error = result.Content.ReadAsStringAsync().Result;
+            }
         }
 
         private void Close()
