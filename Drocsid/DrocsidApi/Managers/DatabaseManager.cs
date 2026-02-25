@@ -401,7 +401,7 @@ namespace DrocsidApi.Managers
             }
         }
 
-        public async Task<FriendModel?> GetFriendByUserNames(int user1Id, int user2Id)
+        public async Task<FriendModel?> GetFriendByUserIds(int user1Id, int user2Id)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
             await using (var cmd = data.CreateCommand("SELECT id, user1Id, user2Id FROM friends WHERE user1Id = @user1Id AND user2Id = @user2Id"))

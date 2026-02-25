@@ -44,8 +44,26 @@ namespace DrocsidApi.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            //finish
-            return Ok();
+            
+            var friendDto = new FriendDto()
+            {
+                User1Id = friendRequest.SenderId,
+                User2Id = friendRequest.ReceiverId,
+            };
+
+            var result = await friendManager.AddFriend(friendDto);
+
+            if (result)
+            {
+                result = await friendRequestManager.RemoveFriendRequest(friendRequest);
+                
+                if (!result)
+                    return Ok("Failed while trying to clean up friend request");
+
+                return Ok("Success while adding friend and cleaning");
+            }
+            else
+                return BadRequest();
         }
 
         [HttpPost("Reject")]

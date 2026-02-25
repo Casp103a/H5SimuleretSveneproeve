@@ -5,7 +5,8 @@ namespace DrocsidApi.Managers
 {
     public interface IFriendManager
     {
-
+        Task<bool> AddFriend(FriendDto friend);
+        Task<bool> RemoveFriend(FriendDto friend);
     }
 
     public class FriendManager : IFriendManager
