@@ -19,6 +19,13 @@ namespace Drocsid.Helpers
                 typeof(PasswordBoxHelper),
                 new PropertyMetadata(false, OnBindPasswordChanged));
 
+        private static readonly DependencyProperty UpdatingPasswordProperty =
+            DependencyProperty.RegisterAttached(
+                "UpdatingPassword",
+                typeof(bool),
+                typeof(PasswordBoxHelper),
+                new PropertyMetadata(false));
+
         public static void SetBindPassword(DependencyObject dp, bool value)
         {
             dp.SetValue(BindPasswordProperty, value);
@@ -39,11 +46,30 @@ namespace Drocsid.Helpers
             dp.SetValue(BoundPasswordProperty, value);
         }
 
+        private static bool GetUpdatingPassword(DependencyObject dp)
+        {
+            return (bool)dp.GetValue(UpdatingPasswordProperty);
+        }
+
+        private static void SetUpdatingPassword(DependencyObject dp, bool value)
+        {
+            dp.SetValue(UpdatingPasswordProperty, value);
+        }
+
         private static void OnBoundPasswordChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is PasswordBox passwordBox)
+            if (d is PasswordBox passwordBox && !GetUpdatingPassword(passwordBox))
             {
-                passwordBox.Password = e.NewValue?.ToString() ?? string.Empty;
+                SetUpdatingPassword(passwordBox, true);
+                string newPassword = e.NewValue?.ToString() ?? string.Empty;
+                
+                // Only update if the password is actually different
+                if (passwordBox.Password != newPassword)
+                {
+                    passwordBox.Password = newPassword;
+                }
+                
+                SetUpdatingPassword(passwordBox, false);
             }
         }
 
@@ -68,9 +94,11 @@ namespace Drocsid.Helpers
 
         private static void HandlePasswordChanged(object sender, RoutedEventArgs e)
         {
-            if (sender is PasswordBox passwordBox)
+            if (sender is PasswordBox passwordBox && !GetUpdatingPassword(passwordBox))
             {
+                SetUpdatingPassword(passwordBox, true);
                 SetBoundPassword(passwordBox, passwordBox.Password);
+                SetUpdatingPassword(passwordBox, false);
             }
         }
     }
