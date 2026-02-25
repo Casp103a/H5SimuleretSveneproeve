@@ -4,13 +4,21 @@ namespace LogicLibrary.Dtos
 {
     public class FriendRequestDto
     {
-        public FriendRequestDto(int id, int senderId, string senderUsername, int reciverId, string reciverUsername)
+        public FriendRequestDto(int senderId, string senderUsername, int receiverId, string receiverUsername)
+        {
+            SenderId = senderId;
+            SenderUsername = senderUsername;
+            ReceiverId = receiverId;
+            ReceiverUsername = receiverUsername;
+        }
+
+        public FriendRequestDto(int id, int senderId, string senderUsername, int receiverId, string receiverUsername)
         {
             Id = id;
             SenderId = senderId;
             SenderUsername = senderUsername;
-            ReciverId = reciverId;
-            ReciverUsername = reciverUsername;
+            ReceiverId = receiverId;
+            ReceiverUsername = receiverUsername;
         }
 
         [Required]
@@ -23,9 +31,18 @@ namespace LogicLibrary.Dtos
         public string SenderUsername { get; set; }
 
         [Required]
-        public int ReciverId { get; set; }
+        public int ReceiverId { get; set; }
 
         [Required]
-        public string ReciverUsername { get; set; }
+        public string ReceiverUsername { get; set; }
+    }
+
+    public class AddFriendRequestDto
+    {
+        [Required]
+        public int SenderId { get; set; }
+
+        [Required]
+        public string? ReceiverUsername { get; set; }
     }
 }
