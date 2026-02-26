@@ -41,8 +41,8 @@ namespace DrocsidApi.Managers
         {
             try
             {
-                await databaseManager.AddRefreshToken(refreshToken);
-                return true;
+                var result = await databaseManager.AddRefreshToken(refreshToken);
+                return result;
             }
             catch (Exception)
             {

@@ -67,7 +67,7 @@ namespace DrocsidApi.Managers
         private async Task CreateUserTable()
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username TEXT NOT NULL, password TEXT NOT NULL, isActive BOOLEAN NOT NULL)"))
+            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username TEXT NOT NULL, password TEXT NOT NULL, isActive BOOLEAN NOT NULL, refreshTokenId TEXT)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -96,12 +96,13 @@ namespace DrocsidApi.Managers
         public async Task<bool> UpdateUser(UserModel user)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("UPDATE users SET username = @username, password = @password, isActive = @isActive WHERE id = @id"))
+            await using (var cmd = data.CreateCommand("UPDATE users SET username = @username, password = @password, isActive = @isActive, refreshTokenId = @refreshTokenId WHERE id = @id"))
             {
                 cmd.Parameters.AddWithValue("id", user.Id);
                 cmd.Parameters.AddWithValue("username", user.Username);
                 cmd.Parameters.AddWithValue("password", user.Password);
                 cmd.Parameters.AddWithValue("isActive", user.IsActive);
+                cmd.Parameters.AddWithValue("refreshTokenId", user.RefreshTokenId);
                 var result = await cmd.ExecuteNonQueryAsync();
                 return result > 0;
             }
@@ -123,7 +124,7 @@ namespace DrocsidApi.Managers
             List<UserModel> users = new List<UserModel>();
 
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("SELECT id, username, password, isActive FROM users"))
+            await using (var cmd = data.CreateCommand("SELECT id, username, password, isActive, refreshTokenId FROM users"))
             {
                 var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
@@ -133,7 +134,8 @@ namespace DrocsidApi.Managers
                         Id = reader.GetInt32(0),
                         Username = reader.GetString(1),
                         Password = reader.GetString(2),
-                        IsActive = reader.GetBoolean(3)
+                        IsActive = reader.GetBoolean(3),
+                        RefreshTokenId = reader.GetString(4),
                     });
                 }
             }
@@ -143,7 +145,7 @@ namespace DrocsidApi.Managers
         public async Task<UserModel?> GetUser(string username)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("SELECT id, username, password, isActive FROM users WHERE username = @username"))
+            await using (var cmd = data.CreateCommand("SELECT id, username, password, isActive, refreshTokenId FROM users WHERE username = @username"))
             {
                 cmd.Parameters.AddWithValue("username", username);
                 var reader = await cmd.ExecuteReaderAsync();
@@ -154,7 +156,8 @@ namespace DrocsidApi.Managers
                         Id = reader.GetInt32(0),
                         Username = reader.GetString(1),
                         Password = reader.GetString(2),
-                        IsActive = reader.GetBoolean(3)
+                        IsActive = reader.GetBoolean(3),
+                        RefreshTokenId = reader.GetString(4),
                     };
                 }
                 else
@@ -167,7 +170,7 @@ namespace DrocsidApi.Managers
         public async Task<UserModel?> GetUser(int id)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("SELECT id, username, password, isActive FROM users WHERE id = @id"))
+            await using (var cmd = data.CreateCommand("SELECT id, username, password, isActive, refreshTokenId FROM users WHERE id = @id"))
             {
                 cmd.Parameters.AddWithValue("id", id);
                 var reader = await cmd.ExecuteReaderAsync();
@@ -178,7 +181,8 @@ namespace DrocsidApi.Managers
                         Id = reader.GetInt32(0),
                         Username = reader.GetString(1),
                         Password = reader.GetString(2),
-                        IsActive = reader.GetBoolean(3)
+                        IsActive = reader.GetBoolean(3),
+                        RefreshTokenId = reader.GetString(4)
                     };
                 }
                 else
