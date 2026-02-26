@@ -2,8 +2,6 @@
 using DrocsidApi.Models;
 using DrocsidApi.Services;
 using LogicLibrary.Models;
-using LogicLibrary.Services;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;

@@ -1,5 +1,6 @@
 ﻿using Drocsid.Views;
 using LogicLibrary.Dtos;
+using LogicLibrary.Interface;
 using LogicLibrary.Services;
 using System.Net.Http;
 using System.Text;
@@ -10,13 +11,13 @@ namespace Drocsid.ViewModels
     internal class RegisterUserViewModel : BindableBase, INavigationAware
     {
         private readonly IRegionManager regionManager;
-        private readonly IHttpClientService httpClientService;
+        private readonly IApplicationSpecific applicationSpecific;
         private readonly IPasswordService passwordService;
 
-        public RegisterUserViewModel(IRegionManager regionManager, IHttpClientService httpClientService, IPasswordService passwordService)
+        public RegisterUserViewModel(IRegionManager regionManager, IApplicationSpecific applicationSpecific, IPasswordService passwordService)
         {
             this.regionManager = regionManager;
-            this.httpClientService = httpClientService;
+            this.applicationSpecific = applicationSpecific;
             this.passwordService = passwordService;
 
             RegisterUserCommand = new DelegateCommand(RegisterUser);
@@ -58,7 +59,8 @@ namespace Drocsid.ViewModels
             };
             var json = JsonSerializer.Serialize(user);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var result = httpClientService.PostAsync(endpoint, content).Result;
+            var httpclient = new HttpClient();
+            var result = httpclient.PostAsync(applicationSpecific.BaseUrl + endpoint, content).Result;
 
             if (result.IsSuccessStatusCode)
             {
