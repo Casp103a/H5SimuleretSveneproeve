@@ -40,7 +40,7 @@ namespace LogicLibrary.Services
                 if (response.IsSuccessStatusCode)
                 {
                     string content = await response.Content.ReadAsStringAsync();
-                    LoginTokens? tokens = JsonSerializer.Deserialize<LoginTokens>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+                    LoginTokens? tokens = JsonSerializer.Deserialize<LoginTokens>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
                     if (tokens == null)
                     {
                         dto = new()
