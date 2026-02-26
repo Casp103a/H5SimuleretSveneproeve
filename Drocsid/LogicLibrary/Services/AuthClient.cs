@@ -98,11 +98,11 @@ namespace LogicLibrary.Services
                     HttpResponseMessage response;
                     if (httpClient != null)
                     {
-                        response = httpClient.PostAsync(applicationSpecific.BaseUrl + "/api/Account/RefreshToken", content).Result;
+                        response = httpClient.PostAsync(applicationSpecific.BaseUrl + "/api/token/RefreshToken", content).Result;
                     }
                     else
                     {
-                        response = client.PostAsync(applicationSpecific.BaseUrl + "/api/Account/RefreshToken", content).Result;
+                        response = client.PostAsync(applicationSpecific.BaseUrl + "/api/token/RefreshToken", content).Result;
                     }
 
                     if (response.IsSuccessStatusCode)
@@ -144,7 +144,7 @@ namespace LogicLibrary.Services
 
             using (HttpClient client = new HttpClient())
             {
-                var response = client.PostAsync(applicationSpecific.BaseUrl + "/api/Account/ValidateToken", content).Result;
+                var response = client.PostAsync(applicationSpecific.BaseUrl + "/api/token/ValidateToken", content).Result;
                 if (response.IsSuccessStatusCode)
                 {
                     return false;
