@@ -24,7 +24,7 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpPost("RefreshToken")]
-        public async Task<IActionResult> RefreshToken(LoginTokens loginTokens)
+        public async Task<IActionResult> RefreshToken([FromBody] LoginTokens loginTokens)
         {
             UserModel? user;
             RefreshTokens? userRefreshToken;
@@ -77,7 +77,7 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpPost("ValidateToken")]
-        public async Task<IActionResult> ValidateToken(LoginTokens tokens)
+        public async Task<IActionResult> ValidateToken([FromBody] LoginTokens tokens)
         {
             UserModel? user;
             RefreshTokens? userRefreshToken;
@@ -89,6 +89,7 @@ namespace DrocsidApi.Controllers
 
                 if (principal?.Identity?.Name == null)
                 {
+                    Console.WriteLine("Failed due to name was null");
                     return Unauthorized();
                 }
 
@@ -113,11 +114,13 @@ namespace DrocsidApi.Controllers
 
             if (userRefreshToken == null || loggedinRefreshToken == null)
             {
+                Console.WriteLine("failed due to user refreshtoken is null or loggedinRefreshtoken is null");
                 return Unauthorized();
             }
 
             if (user == null || userRefreshToken.RefreshToken != loggedinRefreshToken.RefreshToken || userRefreshToken.RefreshTokenExpiry < DateTime.Now || userRefreshToken.RefreshTokenIsUsed)
             {
+                Console.WriteLine("failed due to user is null or users refresh token is not the same as loggedin refresh token or user refresh token is expired or user refresh token is used.");
                 return Unauthorized();
             }
 

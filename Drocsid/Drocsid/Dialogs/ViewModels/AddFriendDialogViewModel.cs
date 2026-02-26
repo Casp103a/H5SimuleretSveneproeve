@@ -4,6 +4,7 @@ using LogicLibrary.Services;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Windows;
 
 namespace Drocsid.Dialogs.ViewModels
 {
@@ -52,7 +53,7 @@ namespace Drocsid.Dialogs.ViewModels
 
         }
 
-        private void AddFriend()
+        private async void AddFriend()
         {
             string endpoint = "/api/friend/Create";
 
@@ -67,16 +68,24 @@ namespace Drocsid.Dialogs.ViewModels
 
             var json = JsonSerializer.Serialize(dto);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var result = httpClientService.PostAsync(endpoint, content).Result;
+            try
+            {
+                var result = await httpClientService.PostAsync(endpoint, content);
 
-            if (result.IsSuccessStatusCode)
+                if (result.IsSuccessStatusCode)
+                {
+                    RequestClose.Invoke();
+                }
+                else
+                {
+                    // Display the error
+                    var error = await result.Content.ReadAsStringAsync();
+                    MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception)
             {
                 RequestClose.Invoke();
-            }
-            else
-            {
-                // Display the error
-                var error = result.Content.ReadAsStringAsync().Result;
             }
         }
 

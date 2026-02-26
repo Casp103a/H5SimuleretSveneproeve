@@ -191,7 +191,7 @@ namespace DrocsidApi.Managers
         private async Task CreateRefreshTokenTable()
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS refreshtokens (id uuid PRIMARY KEY, userId TEXT NOT NULL, token TEXT NOT NULL, expires TIMESTAMP NOT NULL, hasBeenUsed BOOLEAN NOT NULL)"))
+            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS refreshtokens (id uuid PRIMARY KEY, userId INT NOT NULL, token TEXT NOT NULL, expires TIMESTAMP NOT NULL, hasBeenUsed BOOLEAN NOT NULL)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
