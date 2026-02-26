@@ -1,4 +1,5 @@
 ﻿using Drocsid.Dialogs.Views;
+using Drocsid.Messages.Events;
 using Drocsid.Views;
 
 namespace Drocsid.ViewModels
@@ -7,11 +8,13 @@ namespace Drocsid.ViewModels
     {
         private readonly IRegionManager regionManager;
         private readonly IDialogService dialogService;
+        private readonly IEventAggregator eventAggregator;
 
-        public ChatOverviewViewModel(IRegionManager regionManager, IDialogService dialogService)
+        public ChatOverviewViewModel(IRegionManager regionManager, IDialogService dialogService, IEventAggregator eventAggregator)
         {
             this.regionManager = regionManager;
             this.dialogService = dialogService;
+            this.eventAggregator = eventAggregator;
 
             AddFriendCommand = new DelegateCommand(AddFriend);
             LogoutCommand = new DelegateCommand(Logout);
@@ -24,6 +27,7 @@ namespace Drocsid.ViewModels
 
         private void Logout()
         {
+            eventAggregator.GetEvent<SignoutEvent>().Publish();
             regionManager.RequestNavigate("main", nameof(StartView));
         }
 

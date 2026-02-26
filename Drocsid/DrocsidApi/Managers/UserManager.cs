@@ -108,7 +108,7 @@ namespace DrocsidApi.Managers
             {
                 var user = await databaseManager.GetUser(login.Username!);
                 if (user == null) return false;
-                return passwordService.DecodePassword(user.Password) == password;
+                return passwordService.Decrypt(user.Password) == password;
             }
             catch (Exception)
             {

@@ -50,20 +50,20 @@ namespace Drocsid.ViewModels
 
         private void RegisterUser()
         {
-            string url = "http://192.168.10.25:8080/api/user/register";
+            string endpoint = "/api/user/register";
             var user = new LoginRegisterUserDto()
             {
-                Password = passwordService.EncodePassword(Password),
+                Password = passwordService.Encrypt(Password),
                 Username = Username,
             };
             var json = JsonSerializer.Serialize(user);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var result = httpClientService.PostAsync(url, content).Result;
+            var result = httpClientService.PostAsync(endpoint, content).Result;
 
             if (result.IsSuccessStatusCode)
             {
                 //Navigate to overview for chats.
-                regionManager.RequestNavigate("main", nameof(ChatOverviewView));
+                Back();
             }
             else
             {

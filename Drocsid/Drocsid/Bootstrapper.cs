@@ -1,4 +1,6 @@
 ﻿using Drocsid.Dialogs.Views;
+using Drocsid.Messages.Events;
+using Drocsid.Service;
 using Drocsid.Views;
 using LogicLibrary.Interface;
 using LogicLibrary.Services;
@@ -6,7 +8,7 @@ using System.Windows;
 
 namespace Drocsid
 {
-    public class Bootstrapper : PrismBootstrapperBase
+    public class Bootstrapper : PrismBootstrapperBase, IDisposable
     {
         protected override IContainerExtension CreateContainerExtension()
         {
@@ -27,10 +29,17 @@ namespace Drocsid
 
             container.RegisterDialog<AddFriendDialog>(nameof(AddFriendDialog));
 
+            container.RegisterSingleton<IApplicationSpecific, ApplicationSpecific>();
             container.RegisterScoped<IHttpClientService, HttpClientService>();
-            container.RegisterScoped<IApplicationSpecific, ApplicationSpecific>();
+            container.RegisterSingleton<IUserInfoService, UserInfoService>();
             container.RegisterScoped<ILoginService, LoginService>();
             container.RegisterScoped<IPasswordService, PasswordService>();
+        }
+
+        public void Dispose()
+        {
+            var eventAggregator = Container.Resolve<IEventAggregator>();
+            eventAggregator.GetEvent<DisposeEvent>().Publish();
         }
     }
 }

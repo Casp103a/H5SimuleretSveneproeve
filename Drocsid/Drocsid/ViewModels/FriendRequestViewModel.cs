@@ -1,11 +1,11 @@
-﻿using Drocsid.Views;
+﻿using Drocsid.Service;
+using Drocsid.Views;
 using LogicLibrary.Dtos;
 using LogicLibrary.Services;
 using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Windows;
 
 namespace Drocsid.ViewModels
 {
@@ -13,11 +13,13 @@ namespace Drocsid.ViewModels
     {
         private readonly IRegionManager regionManager;
         private readonly IHttpClientService httpClientService;
+        private readonly IUserInfoService userInfoService;
 
-        public FriendRequestViewModel(IRegionManager regionManager, IHttpClientService httpClientService)
+        public FriendRequestViewModel(IRegionManager regionManager, IHttpClientService httpClientService, IUserInfoService userInfoService)
         {
             this.regionManager = regionManager;
             this.httpClientService = httpClientService;
+            this.userInfoService = userInfoService;
 
             BackCommand = new DelegateCommand(Back);
             AcceptRequestCommand = new DelegateCommand<FriendRequestDto>(AcceptRequest);
@@ -48,11 +50,11 @@ namespace Drocsid.ViewModels
 
         private async void AcceptRequest(FriendRequestDto requestDto)
         {
-            string url = "http://192.168.10.25:8080/api/friend/accept";
+            string endpoint = "/api/friend/accept";
 
             var json = JsonSerializer.Serialize(requestDto);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var result = httpClientService.PostAsync(url, content).Result;
+            var result = httpClientService.PostAsync(endpoint, content).Result;
 
             if (result.IsSuccessStatusCode)
             {
@@ -70,11 +72,11 @@ namespace Drocsid.ViewModels
 
         private void RejectRequest(FriendRequestDto requestDto)
         {
-            string url = "http://192.168.10.25:8080/api/friend/reject";
+            string endpoint = "/api/friend/reject";
 
             var json = JsonSerializer.Serialize(requestDto);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var result = httpClientService.PostAsync(url, content).Result;
+            var result = httpClientService.PostAsync(endpoint, content).Result;
 
             if (result.IsSuccessStatusCode)
             {
@@ -93,14 +95,14 @@ namespace Drocsid.ViewModels
 
         private ObservableCollection<FriendRequestDto> GetFriendRequests(int userId)
         {
-            string url = $"http://192.168.10.25:8080/api/friend/GetUserFriendRequest?userId={userId}";
+            string endpoint = $"/api/friend/GetUserFriendRequest?userId={userId}";
 
-            var result = httpClientService.GetAsync(url).Result;
+            var result = httpClientService.GetAsync(endpoint).Result;
 
             if (result.IsSuccessStatusCode)
             {
                 var json = result.Content.ReadAsStringAsync().Result;
-                var friendRequests = JsonSerializer.Deserialize<ObservableCollection<FriendRequestDto>>(json, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
+                var friendRequests = JsonSerializer.Deserialize<ObservableCollection<FriendRequestDto>>(json, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
                 return friendRequests ?? new ObservableCollection<FriendRequestDto>();
             }
             else
@@ -124,9 +126,10 @@ namespace Drocsid.ViewModels
 
         public void OnNavigatedTo(NavigationContext navigationContext)
         {
-            int currentUserId = 9;
+            if (userInfoService.CurrentUser == null)
+                return;
 
-            ListOfFriendRequest = GetFriendRequests(currentUserId);
+            ListOfFriendRequest = GetFriendRequests(userInfoService.CurrentUser.Id);
         }
         #endregion
     }

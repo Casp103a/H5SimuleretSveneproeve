@@ -65,7 +65,7 @@ namespace DrocsidApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = _userManager.CheckPasswordSignInAsync(userDto, passwordService.DecodePassword(userDto.Password));
+            var result = _userManager.CheckPasswordSignInAsync(userDto, passwordService.Decrypt(userDto.Password));
             if (!result.Result) return Unauthorized("Username not found and/or password incorrect");
 
             var user = await _databaseManager.GetUser(userDto.Username);
@@ -96,9 +96,17 @@ namespace DrocsidApi.Controllers
                 return StatusCode(500, "Failed while saving");
             }
 
+            var userReponseDto = new UserDto()
+            {
+                Id = user.Id,
+                Password = user.Password,
+                Username = user.Username,
+            };
+
             return Ok(new LoginTokens
             {
-                Token = token
+                Token = token,
+                CurrentUser = userReponseDto
             });
         }
     }
