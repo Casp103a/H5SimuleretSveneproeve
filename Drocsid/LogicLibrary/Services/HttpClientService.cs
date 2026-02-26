@@ -1,21 +1,32 @@
-﻿namespace LogicLibrary.Services
+﻿using LogicLibrary.Interface;
+
+namespace LogicLibrary.Services
 {
     public interface IHttpClientService
     {
-        Task<HttpResponseMessage> SendAsync(HttpRequestMessage request);
+        Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default);
         Task<HttpResponseMessage> PostAsync(string url, HttpContent httpContent);
         Task<HttpResponseMessage> PutAsync(string url, HttpContent httpContent);
         Task<HttpResponseMessage> DeleteAsync(string url);
         Task<HttpResponseMessage> GetAsync(string url);
     }
 
-    public class HttpClientService : IHttpClientService
+    public class HttpClientService : IHttpClientService, IDisposable
     {
         private readonly HttpClient httpClient;
+        private readonly IApplicationSpecific? applicationSpecific;
 
-        public HttpClientService()
+
+        public HttpClientService(IApplicationSpecific applicationSpecific)
         {
-            httpClient = new HttpClient();
+            httpClient = new AuthClient(applicationSpecific);
+            httpClient.BaseAddress = new Uri(applicationSpecific.BaseUrl!);
+            this.applicationSpecific = applicationSpecific;
+        }
+
+        public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
+        {
+            return await httpClient.SendAsync(request, cancellationToken);
         }
 
         public Task<HttpResponseMessage> DeleteAsync(string url)
@@ -38,9 +49,9 @@
             return httpClient.PutAsync(url, httpContent);
         }
 
-        public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
+        public void Dispose()
         {
-            return httpClient.SendAsync(request);
+            httpClient.Dispose();
         }
     }
 }
