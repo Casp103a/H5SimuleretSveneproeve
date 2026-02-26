@@ -8,7 +8,6 @@ namespace LogicLibrary.Models
         [Required]
         public string? Token { get; set; }
 
-        [Required]
         public UserDto? CurrentUser { get; set; }
     }
 }

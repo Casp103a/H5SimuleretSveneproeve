@@ -21,6 +21,7 @@ namespace DrocsidApi.Managers
         Task<bool> RemoveFriendRequest(FriendRequestModel friendRequest);
         Task<List<FriendRequestModel>> GetAllFriendRequests();
         Task<List<FriendRequestModel>> GetUsersFriendRequests(int userId);
+        Task<FriendRequestModel?> GetFriendRequest(int senderId, int receiverId);
 
         Task<bool> AddFriend(FriendModel friendModel);
         Task<bool> RemoveFriend(FriendModel friendModel);
@@ -190,7 +191,7 @@ namespace DrocsidApi.Managers
         private async Task CreateRefreshTokenTable()
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS refreshtokens (id TEXT PRIMARY KEY, userId TEXT NOT NULL, token TEXT NOT NULL, expires TIMESTAMP NOT NULL, hasBeenUsed BOOLEAN NOT NULL)"))
+            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS refreshtokens (id uuid PRIMARY KEY, userId TEXT NOT NULL, token TEXT NOT NULL, expires TIMESTAMP NOT NULL, hasBeenUsed BOOLEAN NOT NULL)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -358,6 +359,29 @@ namespace DrocsidApi.Managers
             return friendRequests;
         }
 
+        public async Task<FriendRequestModel?> GetFriendRequest(int senderId, int receiverId)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, senderId, senderUsername, receiverId, receiverUsername FROM friendrequests WHERE senderId = @senderId AND receiverId = @receiverId"))
+            {
+                cmd.Parameters.AddWithValue("senderId", senderId);
+                cmd.Parameters.AddWithValue("receiverId", receiverId);
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    return new FriendRequestModel
+                    {
+                        Id = reader.GetInt32(0),
+                        SenderId = reader.GetInt32(1),
+                        SenderUsername = reader.GetString(2),
+                        ReceiverId = reader.GetInt32(3),
+                        ReceiverUsername = reader.GetString(4)
+                    };
+                }
+            }
+            return null;
+        }
+
         private async Task<bool> CheckIfFriendsTableExists()
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
@@ -389,7 +413,7 @@ namespace DrocsidApi.Managers
                 return result > 0;
             }
         }
-        
+
         public async Task<bool> RemoveFriend(FriendModel friendModel)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
@@ -459,7 +483,7 @@ namespace DrocsidApi.Managers
                     {
                         Id = reader.GetInt32(0),
                         User1Id = reader.GetInt32(1),
-                        User2Id= reader.GetInt32(2)
+                        User2Id = reader.GetInt32(2)
                     });
                 }
             }
