@@ -5,6 +5,7 @@ using LogicLibrary.Services;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Windows;
 
 namespace Drocsid.ViewModels
 {
@@ -72,6 +73,7 @@ namespace Drocsid.ViewModels
             {
                 //Display the error
                 var error = result.Content.ReadAsStringAsync().Result;
+                MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
