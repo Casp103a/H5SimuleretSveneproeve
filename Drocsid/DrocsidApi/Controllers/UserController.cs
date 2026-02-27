@@ -66,7 +66,8 @@ namespace DrocsidApi.Controllers
                 return BadRequest(ModelState);
 
             var result = userManager.CheckPasswordSignInAsync(userDto, passwordService.Decrypt(userDto.Password));
-            if (!result.Result) return Unauthorized("Username not found and/or password incorrect");
+            if (!result.Result) 
+                return Unauthorized("Username not found and/or password incorrect");
 
             var user = await databaseManager.GetUser(userDto.Username);
 

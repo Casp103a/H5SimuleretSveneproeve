@@ -157,7 +157,7 @@ namespace DrocsidApi.Managers
                         Username = reader.GetString(1),
                         Password = reader.GetString(2),
                         IsActive = reader.GetBoolean(3),
-                        RefreshTokenId = reader.GetString(4),
+                        RefreshTokenId = reader.IsDBNull(4) ? null : reader.GetString(4),
                     };
                 }
                 else
