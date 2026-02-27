@@ -8,6 +8,7 @@ using System.Text.Json;
 
 namespace Drocsid.ViewModels
 {
+    [RegionMemberLifetime(KeepAlive = false)]
     internal class RegisterUserViewModel : BindableBase, INavigationAware
     {
         private readonly IRegionManager regionManager;

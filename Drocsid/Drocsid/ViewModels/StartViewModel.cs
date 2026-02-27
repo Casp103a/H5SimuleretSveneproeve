@@ -7,6 +7,7 @@ using System.Windows;
 
 namespace Drocsid.ViewModels
 {
+    [RegionMemberLifetime(KeepAlive = false)]
     internal class StartViewModel : BindableBase, INavigationAware
     {
         private readonly IRegionManager regionManager;

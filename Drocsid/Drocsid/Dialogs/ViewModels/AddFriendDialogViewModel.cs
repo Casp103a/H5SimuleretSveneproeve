@@ -8,6 +8,7 @@ using System.Windows;
 
 namespace Drocsid.Dialogs.ViewModels
 {
+    [RegionMemberLifetime(KeepAlive = false)]
     internal class AddFriendDialogViewModel : BindableBase, IDialogAware
     {
         private readonly IHttpClientService httpClientService;
