@@ -43,8 +43,10 @@ namespace DrocsidApi
             builder.Services.AddSingleton<IDatabaseManager, DatabaseManager>();
             builder.Services.AddScoped<IRefreshTokenManager, RefreshTokenManager>();
             builder.Services.AddScoped<IUserManager, UserManager>();
+            builder.Services.AddScoped<IFriendManager, FriendManager>();
+            builder.Services.AddScoped<IFriendRequestManager, FriendRequestManger>();
             builder.Services.AddScoped<ITokenService, TokenService>();
-            builder.Services.AddScoped<PasswordService>();
+            builder.Services.AddScoped<IPasswordService, PasswordService>();
 
             var app = builder.Build();
 

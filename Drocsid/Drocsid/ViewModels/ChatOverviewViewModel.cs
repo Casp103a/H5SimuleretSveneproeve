@@ -13,12 +13,14 @@ namespace Drocsid.ViewModels
             this.regionManager = regionManager;
             this.dialogService = dialogService;
 
-            AddFriendCommand = new(AddFriend);
-            LogoutCommand = new(Logout);
+            AddFriendCommand = new DelegateCommand(AddFriend);
+            LogoutCommand = new DelegateCommand(Logout);
+            ViewFriendRequestCommand = new DelegateCommand(ViewFriendRequests);
         }
 
         public DelegateCommand AddFriendCommand { get; }
         public DelegateCommand LogoutCommand { get; }
+        public DelegateCommand ViewFriendRequestCommand { get; }
 
         private void Logout()
         {
@@ -28,6 +30,11 @@ namespace Drocsid.ViewModels
         private void AddFriend()
         {
             dialogService.Show(nameof(AddFriendDialog));
+        }
+
+        private void ViewFriendRequests()
+        {
+            regionManager.RequestNavigate("main", nameof(FriendRequestView));
         }
 
         #region Navigation

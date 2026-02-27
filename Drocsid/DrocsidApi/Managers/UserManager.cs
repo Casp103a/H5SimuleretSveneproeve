@@ -1,5 +1,6 @@
 ﻿using LogicLibrary.Dtos;
 using DrocsidApi.Models;
+using LogicLibrary.Services;
 
 namespace DrocsidApi.Managers
 {
@@ -9,16 +10,20 @@ namespace DrocsidApi.Managers
         Task<bool?> UpdateAsync(UserModel user);
         Task<bool?> DeleteAsync(UserDto user);
         Task<List<UserModel>> GetAllUsers();
+        Task<UserModel?> GetUser(int id);
+        Task<UserModel?> GetUser(string username);
         Task<bool> CheckPasswordSignInAsync(LoginRegisterUserDto login, string password);
     }
 
     internal class UserManager : IUserManager
     {
         private readonly IDatabaseManager databaseManager;
+        private readonly IPasswordService passwordService;
 
-        public UserManager(IDatabaseManager databaseManager)
+        public UserManager(IDatabaseManager databaseManager, IPasswordService passwordService)
         {
             this.databaseManager = databaseManager;
+            this.passwordService = passwordService;
         }
 
         public async Task<bool?> CreateAsync(LoginRegisterUserDto userDto)
@@ -101,13 +106,39 @@ namespace DrocsidApi.Managers
         {
             try
             {
-                var user = await databaseManager.GetUser(login.Username);
+                var user = await databaseManager.GetUser(login.Username!);
                 if (user == null) return false;
-                return user.Password == password;
+                return passwordService.DecodePassword(user.Password) == password;
             }
             catch (Exception)
             {
                 return false;
+            }
+        }
+
+        public async Task<UserModel?> GetUser(int id)
+        {
+            try
+            {
+                var user = await databaseManager.GetUser(id);
+                return user;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<UserModel?> GetUser(string username)
+        {
+            try
+            {
+                var user = await databaseManager.GetUser(username);
+                return user;
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
     }
