@@ -92,6 +92,16 @@ namespace DrocsidApi.Controllers
             if (sender == null || receiver == null)
                 return NotFound("Failed finding users");
 
+            if (sender.Id == receiver.Id)
+                return BadRequest("You can't sent a friend request to yourself.");
+
+            var checkIfAlreadySentFriendRequest = await friendRequestManager.FriendRequestIsAlreadySent(sender.Id, receiver.Id);
+            
+            if (checkIfAlreadySentFriendRequest)
+            {
+                return Ok("Friend request is already sent");
+            }
+
             var checkIfAlreadyFriends = await friendManager.IsAlreadyFriends(sender.Id, receiver.Id);
             
             if (checkIfAlreadyFriends)

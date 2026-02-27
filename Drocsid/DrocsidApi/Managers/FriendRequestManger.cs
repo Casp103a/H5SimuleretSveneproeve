@@ -9,6 +9,7 @@ namespace DrocsidApi.Managers
         Task<bool> RemoveFriendRequest(FriendRequestDto friendRequest);
         Task<List<FriendRequestDto>> GetAllFriendRequests();
         Task<List<FriendRequestDto>> GetAUsersFriendRequest(int userId);
+        Task<bool> FriendRequestIsAlreadySent(int senderId, int receiverId);
     }
 
     public class FriendRequestManger : IFriendRequestManager
@@ -73,6 +74,16 @@ namespace DrocsidApi.Managers
             }
 
             return result;
+        }
+
+        public async Task<bool> FriendRequestIsAlreadySent(int senderId, int receiverId)
+        {
+            var friendRequest = await databaseManager.GetFriendRequest(senderId, receiverId);
+
+            if (friendRequest != null)
+                return true;
+            else 
+                return false;
         }
     }
 }

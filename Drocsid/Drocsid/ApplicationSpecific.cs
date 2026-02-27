@@ -1,18 +1,53 @@
-﻿using LogicLibrary.Interface;
+﻿using Drocsid.Messages.Events;
+using LogicLibrary.Interface;
 
 namespace Drocsid
 {
     internal class ApplicationSpecific : IApplicationSpecific
     {
-        public Action SignUserOut => throw new NotImplementedException();
+        private readonly IEventAggregator eventAggregator;
 
-        public Action<string> SaveTokenInSecureStorage => throw new NotImplementedException();
+        public ApplicationSpecific(IEventAggregator eventAggregator)
+        {
+            this.eventAggregator = eventAggregator;
+
+            this.eventAggregator.GetEvent<SignoutEvent>().Subscribe(Signout);
+            this.eventAggregator.GetEvent<DisposeEvent>().Subscribe(Dispose);
+        }
+
+        private void Signout()
+        {
+            SaveToken(null);
+        }
+
+        private void SignUserOutMethod()
+        {
+            eventAggregator.GetEvent<SignoutEvent>().Publish();
+        }
+
+        private string? jwtToken;
+
+        public Action SignUserOut => SignUserOutMethod;
+
+        public Action<string?> SaveTokenInSecureStorage => SaveToken;
 
         public string? BaseUrl => "http://192.168.10.25:8080";
 
         public string GetToken()
         {
-            throw new NotImplementedException();
+            return jwtToken ?? string.Empty;
+        }
+
+        private void SaveToken(string? token)
+        {
+            jwtToken = token;
+        }
+
+        private void Dispose()
+        {
+            Signout();
+            eventAggregator.GetEvent<SignoutEvent>().Unsubscribe(Signout);
+            eventAggregator.GetEvent<DisposeEvent>().Unsubscribe(Dispose);
         }
     }
 }

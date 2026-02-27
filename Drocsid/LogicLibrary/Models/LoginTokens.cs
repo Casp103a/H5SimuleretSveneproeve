@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using LogicLibrary.Dtos;
+using System.ComponentModel.DataAnnotations;
 
 namespace LogicLibrary.Models
 {
@@ -6,5 +7,7 @@ namespace LogicLibrary.Models
     {
         [Required]
         public string? Token { get; set; }
+
+        public UserDto? CurrentUser { get; set; }
     }
 }

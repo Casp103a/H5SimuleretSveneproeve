@@ -12,15 +12,15 @@ namespace DrocsidApi.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        private readonly IUserManager _userManager;
-        private readonly IDatabaseManager _databaseManager;
+        private readonly IUserManager userManager;
+        private readonly IDatabaseManager databaseManager;
         private readonly IPasswordService passwordService;
         private readonly ITokenService tokenService;
         private readonly IRefreshTokenManager refreshTokenManager;
         public UserController(IUserManager userManager, IDatabaseManager databaseManager, ITokenService tokenService, IRefreshTokenManager refreshTokenManager, IPasswordService passwordService)
         {
-            _userManager = userManager;
-            _databaseManager = databaseManager;
+            this.userManager = userManager;
+            this.databaseManager = databaseManager;
             this.tokenService = tokenService;
             this.refreshTokenManager = refreshTokenManager;
             this.passwordService = passwordService;
@@ -44,7 +44,7 @@ namespace DrocsidApi.Controllers
                     return BadRequest();
                 }
 
-                var createdUser = await _userManager.CreateAsync(userDto);
+                var createdUser = await userManager.CreateAsync(userDto);
 
                 if (createdUser != null)
                 {
@@ -65,10 +65,11 @@ namespace DrocsidApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = _userManager.CheckPasswordSignInAsync(userDto, passwordService.DecodePassword(userDto.Password));
-            if (!result.Result) return Unauthorized("Username not found and/or password incorrect");
+            var result = userManager.CheckPasswordSignInAsync(userDto, passwordService.Decrypt(userDto.Password));
+            if (!result.Result) 
+                return Unauthorized("Username not found and/or password incorrect");
 
-            var user = await _databaseManager.GetUser(userDto.Username);
+            var user = await databaseManager.GetUser(userDto.Username);
 
             var token = tokenService.CreateToken(user, out Guid id);
 
@@ -89,16 +90,24 @@ namespace DrocsidApi.Controllers
             }
 
             user.RefreshTokenId = refreshToken.ID.ToString();
-            var savedUser = await _userManager.UpdateAsync(user);
+            var savedUser = await userManager.UpdateAsync(user);
 
             if (savedUser == null)
             {
                 return StatusCode(500, "Failed while saving");
             }
 
+            var userReponseDto = new UserDto()
+            {
+                Id = user.Id,
+                Password = user.Password,
+                Username = user.Username,
+            };
+
             return Ok(new LoginTokens
             {
-                Token = token
+                Token = token,
+                CurrentUser = userReponseDto
             });
         }
     }

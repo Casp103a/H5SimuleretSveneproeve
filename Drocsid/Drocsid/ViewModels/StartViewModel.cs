@@ -1,20 +1,29 @@
-﻿using Drocsid.Views;
+﻿using Drocsid.Service;
+using Drocsid.Views;
 using LogicLibrary.Dtos;
+using LogicLibrary.Interface;
 using LogicLibrary.Services;
+using System.Windows;
 
 namespace Drocsid.ViewModels
 {
+    [RegionMemberLifetime(KeepAlive = false)]
     internal class StartViewModel : BindableBase, INavigationAware
     {
         private readonly IRegionManager regionManager;
         private readonly ILoginService loginService;
         private readonly IPasswordService passwordService;
+        private readonly IApplicationSpecific applicationSpecific;
+        private readonly IUserInfoService userInfoService;
 
-        public StartViewModel(IRegionManager regionManager, ILoginService loginService, IPasswordService passwordService)
+        public StartViewModel(IRegionManager regionManager, ILoginService loginService, IPasswordService passwordService, 
+            IApplicationSpecific applicationSpecific, IUserInfoService userInfoService)
         {
             this.regionManager = regionManager;
             this.loginService = loginService;
             this.passwordService = passwordService;
+            this.applicationSpecific = applicationSpecific;
+            this.userInfoService = userInfoService;
 
             LoginCommand = new DelegateCommand(Login);
             RegisterUserCommand = new DelegateCommand(RegisterUser);
@@ -61,19 +70,23 @@ namespace Drocsid.ViewModels
         {
             var loginDto = new LoginRegisterUserDto();
             loginDto.Username = Username;
-            var pass = passwordService.EncodePassword(Password);
+            var pass = passwordService.Encrypt(Password);
             loginDto.Password = pass;
 
-            var (result, message) = await loginService.Login(loginDto);
+            var result = await loginService.Login(loginDto);
             
-            if (result)
+            if (result.Success)
             {
+                userInfoService.CurrentUser = result.User;
+                applicationSpecific.SaveTokenInSecureStorage.Invoke(result.Token);
+
                 //Navigate to overview of chats
                 regionManager.RequestNavigate("main", nameof(ChatOverviewView));
             }
             else
             {
                 //show what failed
+                MessageBox.Show(result.Error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

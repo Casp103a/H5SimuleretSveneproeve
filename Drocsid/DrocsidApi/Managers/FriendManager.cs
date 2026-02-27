@@ -64,14 +64,14 @@ namespace DrocsidApi.Managers
 
         public async Task<bool> IsAlreadyFriends(int user1Id, int user2Id)
         {
-            var friendship = databaseManager.GetFriendByUserIds(user1Id, user2Id);
+            var friendship = await databaseManager.GetFriendByUserIds(user1Id, user2Id);
 
             if (friendship != null) 
             {
                 return true;
             }
 
-            friendship = databaseManager.GetFriendByUserIds(user2Id, user1Id);
+            friendship = await databaseManager.GetFriendByUserIds(user2Id, user1Id);
 
             if (friendship != null) 
             {

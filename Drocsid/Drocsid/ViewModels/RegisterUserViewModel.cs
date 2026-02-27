@@ -1,22 +1,25 @@
 ﻿using Drocsid.Views;
 using LogicLibrary.Dtos;
+using LogicLibrary.Interface;
 using LogicLibrary.Services;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Windows;
 
 namespace Drocsid.ViewModels
 {
+    [RegionMemberLifetime(KeepAlive = false)]
     internal class RegisterUserViewModel : BindableBase, INavigationAware
     {
         private readonly IRegionManager regionManager;
-        private readonly IHttpClientService httpClientService;
+        private readonly IApplicationSpecific applicationSpecific;
         private readonly IPasswordService passwordService;
 
-        public RegisterUserViewModel(IRegionManager regionManager, IHttpClientService httpClientService, IPasswordService passwordService)
+        public RegisterUserViewModel(IRegionManager regionManager, IApplicationSpecific applicationSpecific, IPasswordService passwordService)
         {
             this.regionManager = regionManager;
-            this.httpClientService = httpClientService;
+            this.applicationSpecific = applicationSpecific;
             this.passwordService = passwordService;
 
             RegisterUserCommand = new DelegateCommand(RegisterUser);
@@ -50,25 +53,27 @@ namespace Drocsid.ViewModels
 
         private void RegisterUser()
         {
-            string url = "http://192.168.10.25:8080/api/user/register";
+            string endpoint = "/api/user/register";
             var user = new LoginRegisterUserDto()
             {
-                Password = passwordService.EncodePassword(Password),
+                Password = passwordService.Encrypt(Password),
                 Username = Username,
             };
             var json = JsonSerializer.Serialize(user);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var result = httpClientService.PostAsync(url, content).Result;
+            var httpclient = new HttpClient();
+            var result = httpclient.PostAsync(applicationSpecific.BaseUrl + endpoint, content).Result;
 
             if (result.IsSuccessStatusCode)
             {
                 //Navigate to overview for chats.
-                regionManager.RequestNavigate("main", nameof(ChatOverviewView));
+                Back();
             }
             else
             {
                 //Display the error
                 var error = result.Content.ReadAsStringAsync().Result;
+                MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

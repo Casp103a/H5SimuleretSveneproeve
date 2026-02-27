@@ -1,18 +1,23 @@
-﻿using LogicLibrary.Dtos;
+﻿using Drocsid.Service;
+using LogicLibrary.Dtos;
 using LogicLibrary.Services;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Windows;
 
 namespace Drocsid.Dialogs.ViewModels
 {
+    [RegionMemberLifetime(KeepAlive = false)]
     internal class AddFriendDialogViewModel : BindableBase, IDialogAware
     {
         private readonly IHttpClientService httpClientService;
+        private readonly IUserInfoService userInfoService;
 
-        public AddFriendDialogViewModel(IHttpClientService httpClientService)
+        public AddFriendDialogViewModel(IHttpClientService httpClientService, IUserInfoService userInfoService)
         {
             this.httpClientService = httpClientService;
+            this.userInfoService = userInfoService;
 
             CloseCommand = new DelegateCommand(Close);
             AddFriendCommand = new DelegateCommand(AddFriend);
@@ -27,9 +32,9 @@ namespace Drocsid.Dialogs.ViewModels
         public string UsernameToAdd
         {
             get => usernameToAdd;
-            set 
-            { 
-                SetProperty(ref usernameToAdd, value); 
+            set
+            {
+                SetProperty(ref usernameToAdd, value);
             }
         }
 
@@ -49,28 +54,39 @@ namespace Drocsid.Dialogs.ViewModels
 
         }
 
-        private void AddFriend()
+        private async void AddFriend()
         {
-            string url = "http://192.168.10.25:8080/api/friend/Create";
+            string endpoint = "/api/friend/Create";
+
+            if (userInfoService.CurrentUser == null)
+                return;
 
             var dto = new AddFriendRequestDto()
             {
-                SenderId = 8, // TODO: need to be change to get the active users id
+                SenderId = userInfoService.CurrentUser.Id,
                 ReceiverUsername = usernameToAdd,
             };
 
             var json = JsonSerializer.Serialize(dto);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var result = httpClientService.PostAsync(url, content).Result;
+            try
+            {
+                var result = await httpClientService.PostAsync(endpoint, content);
 
-            if (result.IsSuccessStatusCode)
+                if (result.IsSuccessStatusCode)
+                {
+                    RequestClose.Invoke();
+                }
+                else
+                {
+                    // Display the error
+                    var error = await result.Content.ReadAsStringAsync();
+                    MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception)
             {
                 RequestClose.Invoke();
-            }
-            else
-            {
-                // Display the error
-                var error = result.Content.ReadAsStringAsync().Result;
             }
         }
 

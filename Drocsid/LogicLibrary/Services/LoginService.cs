@@ -8,7 +8,7 @@ namespace LogicLibrary.Services
 {
     public interface ILoginService
     {
-        Task<(bool, string)> Login(LoginRegisterUserDto login);
+        Task<LoginResponseDto> Login(LoginRegisterUserDto login);
     }
 
     public class LoginService : ILoginService
@@ -22,7 +22,7 @@ namespace LogicLibrary.Services
             this.httpClient = httpClient;
         }
 
-        public async Task<(bool, string)> Login(LoginRegisterUserDto userDto)
+        public async Task<LoginResponseDto> Login(LoginRegisterUserDto userDto)
         {
             HttpClient client = new HttpClient();
             if (httpClient != null)
@@ -32,6 +32,7 @@ namespace LogicLibrary.Services
 
             var jsoncontent = JsonSerializer.Serialize<LoginRegisterUserDto>(userDto);
             StringContent stringContent = new StringContent(jsoncontent, Encoding.UTF8, "application/json");
+            LoginResponseDto dto;
 
             try
             {
@@ -39,21 +40,45 @@ namespace LogicLibrary.Services
                 if (response.IsSuccessStatusCode)
                 {
                     string content = await response.Content.ReadAsStringAsync();
-                    LoginTokens? tokens = JsonSerializer.Deserialize<LoginTokens>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+                    LoginTokens? tokens = JsonSerializer.Deserialize<LoginTokens>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
                     if (tokens == null)
                     {
-                        return (false, "Failed on sign in");
+                        dto = new()
+                        {
+                            Success = false,
+                            Error = "Failed on sign in",
+                        };
+                        return dto;
                     }
-                    return (true, tokens.Token);
+
+                    dto = new()
+                    {
+                        Success = true,
+                        Token = tokens.Token,
+                        User = tokens.CurrentUser
+                    };
+
+                    return dto;
                 }
                 else
                 {
-                    return (false, await response.Content.ReadAsStringAsync());
+                    dto = new()
+                    {
+                        Success = false,
+                        Error = await response.Content.ReadAsStringAsync()
+                    };
+                    return dto;
                 }
             }
             catch (Exception ex)
             {
-                return (false, "Failed on sign in");
+                dto = new()
+                {
+                    Success = false,
+                    Error = "Failed on sign in",
+                };
+
+                return dto;
             }
         }
     }
