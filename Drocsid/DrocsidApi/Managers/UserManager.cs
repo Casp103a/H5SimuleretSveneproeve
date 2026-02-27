@@ -1,5 +1,5 @@
-﻿using LogicLibrary.Dtos;
-using DrocsidApi.Models;
+﻿using DrocsidApi.Models;
+using LogicLibrary.Dtos;
 using LogicLibrary.Services;
 
 namespace DrocsidApi.Managers
@@ -36,8 +36,8 @@ namespace DrocsidApi.Managers
                 }
 
                 var doesUserExist = await databaseManager.GetUser(userDto.Username);
-                
-                if(doesUserExist != null)
+
+                if (doesUserExist != null)
                 {
                     return false;
                 }
@@ -67,7 +67,7 @@ namespace DrocsidApi.Managers
                 {
                     return null;
                 }
-                
+
                 await databaseManager.UpdateUser(user);
                 return true;
             }
@@ -110,8 +110,12 @@ namespace DrocsidApi.Managers
                 if (user == null) return false;
                 return passwordService.Decrypt(user.Password) == password;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine(ex.InnerException?.Message);
+                Console.WriteLine(ex.InnerException?.StackTrace);
                 return false;
             }
         }
