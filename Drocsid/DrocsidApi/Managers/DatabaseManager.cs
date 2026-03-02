@@ -37,6 +37,7 @@ namespace DrocsidApi.Managers
         Task<ConversationDto?> GetMessage(int messageId, Guid conversationName);
         Task<bool> CreateConversation(Guid conversationName);
         Task<bool> DeleteConversation(Guid conversationName);
+        Task<LatestMessageDto> GetLatestMessage(Guid id, DateTime latestMessageDateTime);
 
         Task<bool> AddUsersInChatJunc(UsersInChatJuncDto chatJunc);
         Task<bool> UpdateUsersInChatJunc(UsersInChatJuncDto chatJunc);
@@ -700,6 +701,33 @@ namespace DrocsidApi.Managers
             {
                 await cmd.ExecuteNonQueryAsync();
                 return true;
+            }
+        }
+
+        public async Task<LatestMessageDto> GetLatestMessage(Guid conversationName, DateTime latestMessageDateTime)
+        {
+            await CheckAndCreateConversation(conversationName);
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand($"SELECT MAX(sent) FROM \"{conversationName}\" WHERE sent > @latestMessageDateTime"))
+            {
+                cmd.Parameters.AddWithValue("latestMessageDateTime", latestMessageDateTime);
+                var result = await cmd.ExecuteScalarAsync();
+
+                if (result == null || result == DBNull.Value)
+                {
+                    return new LatestMessageDto
+                    {
+                        Id = conversationName,
+                        LatestMessageDateTime = latestMessageDateTime
+                    };
+                }
+
+                return new LatestMessageDto
+                {
+                    Id = conversationName,
+                    LatestMessageDateTime = (DateTime)result
+                };
             }
         }
         #endregion
