@@ -19,7 +19,7 @@
             <ColumnDefinition Width="0.1*"/>
         </Grid.ColumnDefinitions>
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Grid.ColumnSpan="2">
-            <ItemsControl>
+            <ItemsControl ItemsSource="{Binding Chats}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="dtos:ConversationDto">
                         <Grid>
