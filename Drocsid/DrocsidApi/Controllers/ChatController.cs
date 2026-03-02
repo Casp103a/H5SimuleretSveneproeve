@@ -20,7 +20,7 @@ namespace DrocsidApi.Controllers
         #region Chat Management
 
         [HttpPost("createChat")]
-        public async Task<IActionResult> CreateChat([FromBody] UsersInChatJuncDto chatJunc)
+        public async Task<IActionResult> CreateChat([FromQuery] UsersInChatJuncDto chatJunc)
         {
             if (chatJunc == null)
                 return BadRequest("Chat data is required");
@@ -33,14 +33,13 @@ namespace DrocsidApi.Controllers
             if (result == false)
                 return Conflict("Chat already exists");
 
-            // Create the conversation table
             await conversationManager.CreateConversationAsync(chatJunc.ConversationName);
             
             return Ok();
         }
 
         [HttpPut("updateChat")]
-        public async Task<IActionResult> UpdateChat([FromBody] UsersInChatJuncDto chatJunc)
+        public async Task<IActionResult> UpdateChat([FromQuery] UsersInChatJuncDto chatJunc)
         {
             if (chatJunc == null || chatJunc.Id <= 0)
                 return BadRequest("Valid chat data with ID is required");
@@ -57,7 +56,7 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpDelete("deleteChat")]
-        public async Task<IActionResult> DeleteChat(int id)
+        public async Task<IActionResult> DeleteChat([FromQuery] int id)
         {
             if (id <= 0)
                 return BadRequest("Valid chat ID is required");
@@ -88,7 +87,7 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpGet("getChat")]
-        public async Task<IActionResult> GetChat(int id)
+        public async Task<IActionResult> GetChat([FromQuery] int id)
         {
             if (id <= 0)
                 return BadRequest("Valid chat ID is required");
@@ -102,12 +101,12 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpGet("getChatByName")]
-        public async Task<IActionResult> GetChatByName(Guid conversationName)
+        public async Task<IActionResult> GetChatByName([FromQuery] UsersInChatJuncDto usersInChatJuncDto)
         {
-            if (conversationName == Guid.Empty)
+            if (usersInChatJuncDto == null || usersInChatJuncDto.ConversationName == Guid.Empty)
                 return BadRequest("Valid conversation name is required");
 
-            var chat = await usersInChatJuncManager.GetChatByNameAsync(conversationName);
+            var chat = await usersInChatJuncManager.GetChatByNameAsync(usersInChatJuncDto.ConversationName);
             
             if (chat == null)
                 return NotFound("Chat not found");
@@ -116,7 +115,7 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpGet("getUserChats")]
-        public async Task<IActionResult> GetUserChats(int userId)
+        public async Task<IActionResult> GetUserChats([FromQuery] int userId)
         {
             if (userId <= 0)
                 return BadRequest("Valid user ID is required");
@@ -134,12 +133,12 @@ namespace DrocsidApi.Controllers
         #region Participant Management
 
         [HttpPost("addUserToChat")]
-        public async Task<IActionResult> AddUserToChat(Guid conversationName, int userId)
+        public async Task<IActionResult> AddUserToChat([FromQuery] SendRemoveUserFromChatDto sendRemove)
         {
-            if (conversationName == Guid.Empty || userId <= 0)
+            if (sendRemove == null || sendRemove.Junc == null || sendRemove.Junc.ConversationName == Guid.Empty || sendRemove.UserId <= 0)
                 return BadRequest("Valid conversation name and user ID are required");
 
-            var result = await usersInChatJuncManager.AddUserToChatAsync(userId, conversationName);
+            var result = await usersInChatJuncManager.AddUserToChatAsync(sendRemove.UserId, sendRemove.Junc.ConversationName);
             
             if (result == null)
                 return BadRequest("Invalid request data");
@@ -151,12 +150,12 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpDelete("removeUserFromChat")]
-        public async Task<IActionResult> RemoveUserFromChat(Guid conversationName, int userId)
+        public async Task<IActionResult> RemoveUserFromChat([FromQuery] SendRemoveUserFromChatDto sendRemove)
         {
-            if (conversationName == Guid.Empty || userId <= 0)
+            if (sendRemove == null || sendRemove.Junc == null || sendRemove.Junc.ConversationName == Guid.Empty || sendRemove.UserId <= 0)
                 return BadRequest("Valid conversation name and user ID are required");
 
-            var result = await usersInChatJuncManager.RemoveUserFromChatAsync(userId, conversationName);
+            var result = await usersInChatJuncManager.RemoveUserFromChatAsync(sendRemove.UserId, sendRemove.Junc.ConversationName);
             
             if (result == null)
                 return BadRequest("Invalid request data");
@@ -168,12 +167,12 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpGet("getChatParticipants")]
-        public async Task<IActionResult> GetChatParticipants(Guid conversationName)
+        public async Task<IActionResult> GetChatParticipants([FromQuery] UsersInChatJuncDto usersJuncDto)
         {
-            if (conversationName == Guid.Empty)
+            if (usersJuncDto == null || usersJuncDto.ConversationName == Guid.Empty)
                 return BadRequest("Valid conversation name is required");
 
-            var participants = await usersInChatJuncManager.GetChatParticipantsAsync(conversationName);
+            var participants = await usersInChatJuncManager.GetChatParticipantsAsync(usersJuncDto.ConversationName);
             
             if (participants == null)
                 return NotFound("Chat not found");
@@ -186,12 +185,12 @@ namespace DrocsidApi.Controllers
         #region Message Management
 
         [HttpPost("sendMessage")]
-        public async Task<IActionResult> SendMessage(Guid conversationName, [FromBody] ConversationDto message)
+        public async Task<IActionResult> SendMessage([FromQuery] UpdateMessageDto actionMessageDto)
         {
-            if (conversationName == Guid.Empty || message == null)
+            if (actionMessageDto == null || actionMessageDto.UsersInChatJunc == null || actionMessageDto.UsersInChatJunc.ConversationName == Guid.Empty || actionMessageDto.Conversation == null)
                 return BadRequest("Valid conversation name and message are required");
 
-            var result = await conversationManager.SendMessageAsync(message, conversationName);
+            var result = await conversationManager.SendMessageAsync(actionMessageDto.Conversation, actionMessageDto.UsersInChatJunc.ConversationName);
             
             if (result == null)
                 return BadRequest("Invalid message data");
@@ -203,12 +202,12 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpPut("updateMessage")]
-        public async Task<IActionResult> UpdateMessage(Guid conversationName, [FromBody] ConversationDto message)
+        public async Task<IActionResult> UpdateMessage([FromQuery] UpdateMessageDto actionMessageDto)
         {
-            if (conversationName == Guid.Empty || message == null || message.Id <= 0)
+            if (actionMessageDto == null || actionMessageDto.UsersInChatJunc == null || actionMessageDto.UsersInChatJunc.ConversationName == Guid.Empty || actionMessageDto.Conversation == null || actionMessageDto.Conversation.Id <= 0)
                 return BadRequest("Valid conversation name and message with ID are required");
 
-            var result = await conversationManager.UpdateMessageAsync(message, conversationName);
+            var result = await conversationManager.UpdateMessageAsync(actionMessageDto.Conversation, actionMessageDto.UsersInChatJunc.ConversationName);
             
             if (result == null)
                 return BadRequest("Invalid message data");
@@ -220,12 +219,12 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpDelete("deleteMessage")]
-        public async Task<IActionResult> DeleteMessage(Guid conversationName, int messageId)
+        public async Task<IActionResult> DeleteMessage([FromQuery] UsersInChatJuncDto usersJuncDto)
         {
-            if (conversationName == Guid.Empty || messageId <= 0)
+            if (usersJuncDto == null || usersJuncDto.ConversationName == Guid.Empty || usersJuncDto.Id <= 0)
                 return BadRequest("Valid conversation name and message ID are required");
 
-            var result = await conversationManager.DeleteMessageAsync(messageId, conversationName);
+            var result = await conversationManager.DeleteMessageAsync(usersJuncDto.Id, usersJuncDto.ConversationName);
             
             if (result == null)
                 return BadRequest("Invalid request data");
@@ -237,14 +236,14 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpGet("getConversationMessages")]
-        public async Task<IActionResult> GetConversationMessages(Guid conversationName)
+        public async Task<IActionResult> GetConversationMessages([FromQuery] UsersInChatJuncDto conversationDto)
         {
-            if (conversationName == Guid.Empty)
+            if (conversationDto == null || conversationDto.ConversationName == Guid.Empty)
                 return BadRequest("Valid conversation name is required");
 
             List<ConversationDto>? messages;
 
-            messages = await conversationManager.GetConversationMessagesAsync(conversationName);
+            messages = await conversationManager.GetConversationMessagesAsync(conversationDto.ConversationName);
 
             if (messages == null)
                 return StatusCode(500, "Error retrieving messages");
@@ -253,12 +252,12 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpGet("getMessage")]
-        public async Task<IActionResult> GetMessage(Guid conversationName, int messageId)
+        public async Task<IActionResult> GetMessage([FromQuery] UsersInChatJuncDto usersJuncDto)
         {
-            if (conversationName == Guid.Empty || messageId <= 0)
+            if (usersJuncDto == null || usersJuncDto.Id <= 0 || usersJuncDto.ConversationName == Guid.Empty)
                 return BadRequest("Valid conversation name and message ID are required");
 
-            var message = await conversationManager.GetMessageAsync(messageId, conversationName);
+            var message = await conversationManager.GetMessageAsync(usersJuncDto.Id, usersJuncDto.ConversationName);
             
             if (message == null)
                 return NotFound("Message not found");
@@ -266,17 +265,31 @@ namespace DrocsidApi.Controllers
             return Ok(message);
         }
 
+        [HttpGet("getLatestMessage")]
+        public async Task<IActionResult> GetLatestMessage([FromQuery] LatestMessageDto latestMessageDto)
+        {
+            if (latestMessageDto == null || latestMessageDto.Id == Guid.Empty)
+                return BadRequest("Valid conversation name is required");
+
+            var latestMessage = await conversationManager.GetLatestMessageAsync(latestMessageDto.Id, latestMessageDto.LatestMessageDateTime);
+
+            if (latestMessage == null)
+                return NotFound("No new messages found");
+
+            return Ok(latestMessage);
+        }
+
         #endregion
 
         #region Conversation Management
 
         [HttpPost("createConversation")]
-        public async Task<IActionResult> CreateConversation(Guid conversationName)
+        public async Task<IActionResult> CreateConversation([FromQuery] UsersInChatJuncDto conversationDto)
         {
-            if (conversationName == Guid.Empty)
+            if (conversationDto == null || conversationDto.ConversationName == Guid.Empty)
                 return BadRequest("Valid conversation name is required");
 
-            var result = await conversationManager.CreateConversationAsync(conversationName);
+            var result = await conversationManager.CreateConversationAsync(conversationDto.ConversationName);
             
             if (result == null)
                 return BadRequest("Invalid conversation name");
@@ -288,12 +301,12 @@ namespace DrocsidApi.Controllers
         }
 
         [HttpDelete("deleteConversation")]
-        public async Task<IActionResult> DeleteConversation(Guid conversationName)
+        public async Task<IActionResult> DeleteConversation([FromQuery] UsersInChatJuncDto conversationDto)
         {
-            if (conversationName == Guid.Empty)
+            if (conversationDto == null || conversationDto.ConversationName == Guid.Empty)
                 return BadRequest("Valid conversation name is required");
 
-            var result = await conversationManager.DeleteConversationAsync(conversationName);
+            var result = await conversationManager.DeleteConversationAsync(conversationDto.ConversationName);
             
             if (result == null)
                 return BadRequest("Invalid conversation name");

@@ -11,6 +11,7 @@ namespace DrocsidApi.Managers
         Task<ConversationDto?> GetMessageAsync(int messageId, Guid conversationName);
         Task<bool?> CreateConversationAsync(Guid conversationName);
         Task<bool?> DeleteConversationAsync(Guid conversationName);
+        Task<LatestMessageDto?> GetLatestMessageAsync(Guid id, DateTime latestMessageDateTime);
     }
 
     public class ConversationManager : IConversationManager
@@ -170,6 +171,25 @@ namespace DrocsidApi.Managers
                 }
 
                 return await databaseManager.DeleteConversation(conversationName);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<LatestMessageDto?> GetLatestMessageAsync(Guid id, DateTime latestMessageDateTime)
+        {
+            try
+            {
+                if (id == Guid.Empty)
+                {
+                    return null;
+                }
+
+                var latestMessage = await databaseManager.GetLatestMessage(id, latestMessageDateTime);
+
+                return latestMessage;
             }
             catch (Exception)
             {
