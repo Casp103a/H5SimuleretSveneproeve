@@ -1,4 +1,5 @@
 ﻿using DrocsidApi.Models;
+using LogicLibrary.Dtos;
 using Npgsql;
 
 namespace DrocsidApi.Managers
@@ -27,7 +28,23 @@ namespace DrocsidApi.Managers
         Task<bool> RemoveFriend(FriendModel friendModel);
         Task<FriendModel?> GetFriendByUserIds(int user1Id, int user2Id);
         Task<FriendModel?> GetFriendById(int id);
-        Task<List<FriendModel>> FindUsersFriends(int userId); 
+        Task<List<FriendModel>> FindUsersFriends(int userId);
+
+        Task<bool> SendMessage(ConversationDto message, Guid conversationName);
+        Task<bool> UpdateMessage(ConversationDto message, Guid conversationName);
+        Task<bool> DeleteMessage(int messageId, Guid conversationName);
+        Task<List<ConversationDto>> GetConversationMessages(Guid conversationName);
+        Task<ConversationDto?> GetMessage(int messageId, Guid conversationName);
+        Task<bool> CreateConversation(Guid conversationName);
+        Task<bool> DeleteConversation(Guid conversationName);
+
+        Task<bool> AddUsersInChatJunc(UsersInChatJuncDto chatJunc);
+        Task<bool> UpdateUsersInChatJunc(UsersInChatJuncDto chatJunc);
+        Task<bool> DeleteUsersInChatJunc(int id);
+        Task<List<UsersInChatJuncDto>> GetAllUsersInChatJunc();
+        Task<UsersInChatJuncDto?> GetUsersInChatJunc(int id);
+        Task<UsersInChatJuncDto?> GetUsersInChatJuncByName(Guid conversationName);
+        Task<List<UsersInChatJuncDto>> GetUserChats(int userId);
     }
 
     internal class DatabaseManager : IDatabaseManager
@@ -523,7 +540,7 @@ namespace DrocsidApi.Managers
 
             return friends;
         }
-#endregion
+        #endregion
 
         private async Task<bool> CheckIfUsersInChatJuncTableExists()
         {
@@ -568,5 +585,249 @@ namespace DrocsidApi.Managers
             if (!await CheckIfConversationTableExists(conversationName))
                 await CreateConversationTable(conversationName);
         }
+
+        #region conversation
+        public async Task<bool> SendMessage(ConversationDto message, Guid conversationName)
+        {
+            await CheckAndCreateConversation(conversationName);
+            
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand($"INSERT INTO \"{conversationName}\" (message, file, reply, senderid, sent) VALUES (@message, @file, @reply, @senderid, @sent)"))
+            {
+                cmd.Parameters.AddWithValue("message", message.Message ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("file", message.File ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("reply", message.Reply ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("senderid", message.SenderId);
+                cmd.Parameters.AddWithValue("sent", message.Sent);
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+
+        public async Task<bool> UpdateMessage(ConversationDto message, Guid conversationName)
+        {
+            await CheckAndCreateConversation(conversationName);
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand($"UPDATE \"{conversationName}\" SET message = @message, file = @file, reply = @reply WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", message.Id);
+                cmd.Parameters.AddWithValue("message", message.Message ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("file", message.File ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("reply", message.Reply ?? (object)DBNull.Value);
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+
+        public async Task<bool> DeleteMessage(int messageId, Guid conversationName)
+        {
+            await CheckAndCreateConversation(conversationName);
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand($"DELETE FROM \"{conversationName}\" WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", messageId);
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+
+        public async Task<List<ConversationDto>> GetConversationMessages(Guid conversationName)
+        {
+            await CheckAndCreateConversation(conversationName);
+            List<ConversationDto> messages = [];
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand($"SELECT id, message, file, reply, senderid, sent FROM \"{conversationName}\" ORDER BY sent ASC"))
+            {
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    messages.Add(new ConversationDto
+                    {
+                        Id = reader.GetInt32(0),
+                        Message = reader.IsDBNull(1) ? null : reader.GetString(1),
+                        File = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        Reply = reader.IsDBNull(3) ? null : reader.GetString(3),
+                        SenderId = reader.GetInt32(4),
+                        Sent = reader.GetDateTime(5)
+                    });
+                }
+            }
+            return messages;
+        }
+
+        public async Task<ConversationDto?> GetMessage(int messageId, Guid conversationName)
+        {
+            await CheckAndCreateConversation(conversationName);
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand($"SELECT id, message, file, reply, senderid, sent FROM \"{conversationName}\" WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", messageId);
+                var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    return new ConversationDto
+                    {
+                        Id = reader.GetInt32(0),
+                        Message = reader.IsDBNull(1) ? null : reader.GetString(1),
+                        File = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        Reply = reader.IsDBNull(3) ? null : reader.GetString(3),
+                        SenderId = reader.GetInt32(4),
+                        Sent = reader.GetDateTime(5)
+                    };
+                }
+            }
+            return null;
+        }
+
+        public async Task<bool> CreateConversation(Guid conversationName)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sent TIMESTAMP)"))
+            {
+                await cmd.ExecuteNonQueryAsync();
+                return true;
+            }
+        }
+
+        public async Task<bool> DeleteConversation(Guid conversationName)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand($"DROP TABLE IF EXISTS \"{conversationName}\""))
+            {
+                await cmd.ExecuteNonQueryAsync();
+                return true;
+            }
+        }
+        #endregion
+
+        #region usersInChatJunc
+        public async Task<bool> AddUsersInChatJunc(UsersInChatJuncDto chatJunc)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("INSERT INTO users_in_chat_junc (userids, conversationname, conversationdisplayname) VALUES (@userids, @conversationname, @conversationdisplayname)"))
+            {
+                cmd.Parameters.AddWithValue("userids", chatJunc.UserIds.ToArray());
+                cmd.Parameters.AddWithValue("conversationname", chatJunc.ConversationName);
+                cmd.Parameters.AddWithValue("conversationdisplayname", chatJunc.ConversationDisplayName);
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+
+        public async Task<bool> UpdateUsersInChatJunc(UsersInChatJuncDto chatJunc)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("UPDATE users_in_chat_junc SET userids = @userids, conversationdisplayname = @conversationdisplayname WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", chatJunc.Id);
+                cmd.Parameters.AddWithValue("userids", chatJunc.UserIds.ToArray());
+                cmd.Parameters.AddWithValue("conversationdisplayname", chatJunc.ConversationDisplayName);
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+
+        public async Task<bool> DeleteUsersInChatJunc(int id)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("DELETE FROM users_in_chat_junc WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", id);
+                var result = await cmd.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+
+        public async Task<List<UsersInChatJuncDto>> GetAllUsersInChatJunc()
+        {
+            List<UsersInChatJuncDto> chatJuncs = [];
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc"))
+            {
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    chatJuncs.Add(new UsersInChatJuncDto
+                    {
+                        Id = reader.GetInt32(0),
+                        UserIds = ((int[])reader.GetValue(1)).ToList(),
+                        ConversationName = reader.GetGuid(2),
+                        ConversationDisplayName = reader.GetString(3)
+                    });
+                }
+            }
+            return chatJuncs;
+        }
+
+        public async Task<UsersInChatJuncDto?> GetUsersInChatJunc(int id)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc WHERE id = @id"))
+            {
+                cmd.Parameters.AddWithValue("id", id);
+                var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    return new UsersInChatJuncDto
+                    {
+                        Id = reader.GetInt32(0),
+                        UserIds = ((int[])reader.GetValue(1)).ToList(),
+                        ConversationName = reader.GetGuid(2),
+                        ConversationDisplayName = reader.GetString(3)
+                    };
+                }
+            }
+            return null;
+        }
+
+        public async Task<UsersInChatJuncDto?> GetUsersInChatJuncByName(Guid conversationName)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc WHERE conversationname = @conversationname"))
+            {
+                cmd.Parameters.AddWithValue("conversationname", conversationName);
+                var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    return new UsersInChatJuncDto
+                    {
+                        Id = reader.GetInt32(0),
+                        UserIds = ((int[])reader.GetValue(1)).ToList(),
+                        ConversationName = reader.GetGuid(2),
+                        ConversationDisplayName = reader.GetString(3)
+                    };
+                }
+            }
+            return null;
+        }
+
+        public async Task<List<UsersInChatJuncDto>> GetUserChats(int userId)
+        {
+            List<UsersInChatJuncDto> chatJuncs = [];
+
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc WHERE @userId = ANY(userids)"))
+            {
+                cmd.Parameters.AddWithValue("userId", userId);
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    chatJuncs.Add(new UsersInChatJuncDto
+                    {
+                        Id = reader.GetInt32(0),
+                        UserIds = ((int[])reader.GetValue(1)).ToList(),
+                        ConversationName = reader.GetGuid(2),
+                        ConversationDisplayName = reader.GetString(3)
+                    });
+                }
+            }
+            return chatJuncs;
+        }
+        #endregion 
     }
 }
