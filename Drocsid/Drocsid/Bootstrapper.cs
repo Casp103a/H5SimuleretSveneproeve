@@ -26,6 +26,7 @@ namespace Drocsid
             container.RegisterForNavigation<RegisterUserView>(nameof(RegisterUserView));
             container.RegisterForNavigation<ChatOverviewView>(nameof(ChatOverviewView));
             container.RegisterForNavigation<FriendRequestView>(nameof(FriendRequestView));
+            container.RegisterForNavigation<ChatView>(nameof(ChatView));
 
             container.RegisterDialog<AddFriendDialog>(nameof(AddFriendDialog));
 

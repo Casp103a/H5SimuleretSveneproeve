@@ -2,6 +2,11 @@
 using Drocsid.Messages.Events;
 using Drocsid.Service;
 using Drocsid.Views;
+using LogicLibrary.Dtos;
+using LogicLibrary.Services;
+using System.Collections.ObjectModel;
+using System.Text.Json;
+using System.Windows;
 
 namespace Drocsid.ViewModels
 {
@@ -11,13 +16,15 @@ namespace Drocsid.ViewModels
         private readonly IDialogService dialogService;
         private readonly IEventAggregator eventAggregator;
         private readonly IUserInfoService userInfoService;
+        private readonly IHttpClientService httpClientService;
 
-        public ChatOverviewViewModel(IRegionManager regionManager, IDialogService dialogService, IEventAggregator eventAggregator, IUserInfoService userInfoService)
+        public ChatOverviewViewModel(IRegionManager regionManager, IDialogService dialogService, IEventAggregator eventAggregator, IUserInfoService userInfoService, IHttpClientService httpClientService)
         {
             this.regionManager = regionManager;
             this.dialogService = dialogService;
             this.eventAggregator = eventAggregator;
             this.userInfoService = userInfoService;
+            this.httpClientService = httpClientService;
 
             AddFriendCommand = new DelegateCommand(AddFriend);
             LogoutCommand = new DelegateCommand(Logout);
@@ -33,12 +40,37 @@ namespace Drocsid.ViewModels
         public string GreetUser
         {
             get => greetUser;
-            set 
-            { 
+            set
+            {
                 SetProperty(ref greetUser, value);
             }
         }
 
+        private ObservableCollection<UsersInChatJuncDto> listOfChats;
+
+        public ObservableCollection<UsersInChatJuncDto> ListOfChats
+        {
+            get => listOfChats;
+            set
+            {
+                SetProperty(ref listOfChats, value);
+            }
+        }
+
+        private UsersInChatJuncDto selectedChat;
+
+        public UsersInChatJuncDto SelectedChat
+        {
+            get => selectedChat;
+            set
+            {
+                if (value == selectedChat)
+                    return;
+
+                SetProperty(ref selectedChat, value);
+                ChangeChatView(SelectedChat);
+            }
+        }
 
         private void Logout()
         {
@@ -56,6 +88,37 @@ namespace Drocsid.ViewModels
             regionManager.RequestNavigate("main", nameof(FriendRequestView));
         }
 
+        private void ChangeChatView(UsersInChatJuncDto chat)
+        {
+            var param = new NavigationParameters
+            {
+                { "chat", chat }
+            };
+
+            regionManager.RequestNavigate("chat", nameof(ChatView), param);
+        }
+
+        private ObservableCollection<UsersInChatJuncDto> GetChats()
+        {
+            string endpoint = $"/api/chat/getUserChats?userId={userInfoService.CurrentUser?.Id}";
+
+            var result = httpClientService.GetAsync(endpoint).GetAwaiter().GetResult();
+
+            if (result.IsSuccessStatusCode)
+            {
+                var json = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var chats = JsonSerializer.Deserialize<ObservableCollection<UsersInChatJuncDto>>(json, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                return chats ?? new ObservableCollection<UsersInChatJuncDto>();
+            }
+            else
+            {
+                // Display the error
+                var error = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return new ObservableCollection<UsersInChatJuncDto>();
+            }
+        }
+
         #region Navigation
         public bool IsNavigationTarget(NavigationContext navigationContext)
         {
@@ -70,6 +133,7 @@ namespace Drocsid.ViewModels
         public void OnNavigatedTo(NavigationContext navigationContext)
         {
             GreetUser = "Hi " + userInfoService.CurrentUser?.Username;
+            ListOfChats = GetChats();
         }
         #endregion
     }

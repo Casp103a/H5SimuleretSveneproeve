@@ -25,11 +25,11 @@
         <Button Content="Add friend" Grid.Column="1" Width="125" HorizontalAlignment="Right" Command="{Binding AddFriendCommand}"/>
         <Button Content="View friend requests" Grid.Column="2" HorizontalAlignment="Left" Command="{Binding ViewFriendRequestCommand}"/>
 
-        <ListBox Grid.Row="1" Background="Transparent" SelectionMode="Single">
+        <ListBox Grid.Row="1" Background="Transparent" SelectionMode="Single" ItemsSource="{Binding ListOfChats}" SelectedItem="{Binding SelectedChat}">
             <ListBox.ItemTemplate>
-                <DataTemplate DataType="dtos:UserDto">
+                <DataTemplate DataType="dtos:UsersInChatJuncDto">
                     <Grid>
-                        <Label Content="{Binding Username}"/>
+                        <Label Content="{Binding ConversationDisplayName}"/>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
