@@ -55,10 +55,9 @@ namespace DrocsidApi.Managers
 
             if (!await CheckIfUsersInChatJuncTableExists())
                 await CreateUsersInChatJuncTable();
-
-            if (!await CheckIfConversationTableExists())
-                await CreateConversationTable();
         }
+
+        #region users
 
         private async Task<bool> CheckIfUserTableExists()
         {
@@ -198,6 +197,10 @@ namespace DrocsidApi.Managers
             }
         }
 
+#endregion
+
+        #region refreshTokens
+
         private async Task CreateRefreshTokenTable()
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
@@ -278,6 +281,9 @@ namespace DrocsidApi.Managers
             }
         }
 
+#endregion
+
+        #region friendRequest
         private async Task<bool> CheckIfFriendRequestTableExists()
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
@@ -391,7 +397,9 @@ namespace DrocsidApi.Managers
             }
             return null;
         }
+#endregion
 
+        #region friends
         private async Task<bool> CheckIfFriendsTableExists()
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
@@ -515,6 +523,7 @@ namespace DrocsidApi.Managers
 
             return friends;
         }
+#endregion
 
         private async Task<bool> CheckIfUsersInChatJuncTableExists()
         {
@@ -529,29 +538,35 @@ namespace DrocsidApi.Managers
         private async Task CreateUsersInChatJuncTable()
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS users_in_chat_junc (id SERIAL PRIMARY KEY, userids INT[] NOT NULL, conversationid INT NOT NULL)"))
+            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS users_in_chat_junc (id SERIAL PRIMARY KEY, userids INT[] NOT NULL, conversationname uuid NOT NULL)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
         }
 
-        private async Task<bool> CheckIfConversationTableExists()
+        private async Task<bool> CheckIfConversationTableExists(Guid conversationName)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'conversation')"))
+            await using (var cmd = data.CreateCommand($"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = '{conversationName}')"))
             {
                 var result = await cmd.ExecuteScalarAsync();
                 return result != null && (bool)result;
             }
         }
 
-        private async Task CreateConversationTable()
+        private async Task CreateConversationTable(Guid conversationName)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS conversation (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT)"))
+            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS {conversationName} (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
+        }
+
+        private async Task CheckAndCreateConversation(Guid conversationName)
+        {
+            if (!await CheckIfConversationTableExists(conversationName))
+                await CreateConversationTable(conversationName);
         }
     }
 }
