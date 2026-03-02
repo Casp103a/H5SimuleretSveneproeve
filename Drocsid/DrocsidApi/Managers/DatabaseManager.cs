@@ -538,7 +538,7 @@ namespace DrocsidApi.Managers
         private async Task CreateUsersInChatJuncTable()
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS users_in_chat_junc (id SERIAL PRIMARY KEY, userids INT[] NOT NULL, conversationname uuid NOT NULL)"))
+            await using (var cmd = data.CreateCommand("CREATE TABLE IF NOT EXISTS users_in_chat_junc (id SERIAL PRIMARY KEY, userids INT[] NOT NULL, conversationname uuid NOT NULL, conversationdisplayname TEXT NOT NULL)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -557,7 +557,7 @@ namespace DrocsidApi.Managers
         private async Task CreateConversationTable(Guid conversationName)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS {conversationName} (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT)"))
+            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS {conversationName} (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sent TIMESTAMP)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
