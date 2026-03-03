@@ -33,19 +33,20 @@ namespace DrocsidApi.Managers
         Task<bool> SendMessage(ConversationDto message, Guid conversationName);
         Task<bool> UpdateMessage(ConversationDto message, Guid conversationName);
         Task<bool> DeleteMessage(int messageId, Guid conversationName);
-        Task<List<ConversationDto>> GetConversationMessages(Guid conversationName);
-        Task<ConversationDto?> GetMessage(int messageId, Guid conversationName);
+        Task<List<ConversationModel>> GetConversationMessages(Guid conversationName);
+        Task<ConversationModel?> GetMessage(int messageId, Guid conversationName);
         Task<bool> CreateConversation(Guid conversationName);
         Task<bool> DeleteConversation(Guid conversationName);
-        Task<LatestMessageDto> GetLatestMessage(Guid id, DateTime latestMessageDateTime);
+        Task<List<ConversationModel>> GetLatestMessage(Guid conversationName, DateTime latestMessageDateTime);
+        Task<bool> IsThisLatestMessage(Guid conversationName, int id);
 
         Task<bool> AddUsersInChatJunc(UsersInChatJuncDto chatJunc);
         Task<bool> UpdateUsersInChatJunc(UsersInChatJuncDto chatJunc);
         Task<bool> DeleteUsersInChatJunc(int id);
-        Task<List<UsersInChatJuncDto>> GetAllUsersInChatJunc();
-        Task<UsersInChatJuncDto?> GetUsersInChatJunc(int id);
+        Task<List<UsersInChatJuncModel>> GetAllUsersInChatJunc();
+        Task<UsersInChatJuncModel?> GetUsersInChatJunc(int id);
         Task<UsersInChatJuncDto?> GetUsersInChatJuncByName(Guid conversationName);
-        Task<List<UsersInChatJuncDto>> GetUserChats(int userId);
+        Task<List<UsersInChatJuncModel>> GetUserChats(int userId);
     }
 
     internal class DatabaseManager : IDatabaseManager
@@ -215,7 +216,7 @@ namespace DrocsidApi.Managers
             }
         }
 
-#endregion
+        #endregion
 
         #region refreshTokens
 
@@ -299,7 +300,7 @@ namespace DrocsidApi.Managers
             }
         }
 
-#endregion
+        #endregion
 
         #region friendRequest
         private async Task<bool> CheckIfFriendRequestTableExists()
@@ -415,7 +416,7 @@ namespace DrocsidApi.Managers
             }
             return null;
         }
-#endregion
+        #endregion
 
         #region friends
         private async Task<bool> CheckIfFriendsTableExists()
@@ -575,7 +576,7 @@ namespace DrocsidApi.Managers
         private async Task CreateConversationTable(Guid conversationName)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sent TIMESTAMP)"))
+            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sendername TEXT, sent TIMESTAMP)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -591,14 +592,15 @@ namespace DrocsidApi.Managers
         public async Task<bool> SendMessage(ConversationDto message, Guid conversationName)
         {
             await CheckAndCreateConversation(conversationName);
-            
+
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand($"INSERT INTO \"{conversationName}\" (message, file, reply, senderid, sent) VALUES (@message, @file, @reply, @senderid, @sent)"))
+            await using (var cmd = data.CreateCommand($"INSERT INTO \"{conversationName}\" (message, file, reply, senderid, sendername, sent) VALUES (@message, @file, @reply, @senderid, @sendername, @sent)"))
             {
                 cmd.Parameters.AddWithValue("message", message.Message ?? (object)DBNull.Value);
                 cmd.Parameters.AddWithValue("file", message.File ?? (object)DBNull.Value);
                 cmd.Parameters.AddWithValue("reply", message.Reply ?? (object)DBNull.Value);
                 cmd.Parameters.AddWithValue("senderid", message.SenderId);
+                cmd.Parameters.AddWithValue("sendername", message.SenderName ?? (object)DBNull.Value);
                 cmd.Parameters.AddWithValue("sent", message.Sent);
                 var result = await cmd.ExecuteNonQueryAsync();
                 return result > 0;
@@ -634,50 +636,52 @@ namespace DrocsidApi.Managers
             }
         }
 
-        public async Task<List<ConversationDto>> GetConversationMessages(Guid conversationName)
+        public async Task<List<ConversationModel>> GetConversationMessages(Guid conversationName)
         {
             await CheckAndCreateConversation(conversationName);
-            List<ConversationDto> messages = [];
+            List<ConversationModel> messages = [];
 
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand($"SELECT id, message, file, reply, senderid, sent FROM \"{conversationName}\" ORDER BY sent ASC"))
+            await using (var cmd = data.CreateCommand($"SELECT id, message, file, reply, senderid, sendername, sent FROM \"{conversationName}\" ORDER BY sent ASC"))
             {
                 var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    messages.Add(new ConversationDto
+                    messages.Add(new ConversationModel
                     {
                         Id = reader.GetInt32(0),
-                        Message = reader.IsDBNull(1) ? null : reader.GetString(1),
+                        Message = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                         File = reader.IsDBNull(2) ? null : reader.GetString(2),
                         Reply = reader.IsDBNull(3) ? null : reader.GetString(3),
                         SenderId = reader.GetInt32(4),
-                        Sent = reader.GetDateTime(5)
+                        SenderName = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                        Sent = reader.GetDateTime(6)
                     });
                 }
             }
             return messages;
         }
 
-        public async Task<ConversationDto?> GetMessage(int messageId, Guid conversationName)
+        public async Task<ConversationModel?> GetMessage(int messageId, Guid conversationName)
         {
             await CheckAndCreateConversation(conversationName);
 
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand($"SELECT id, message, file, reply, senderid, sent FROM \"{conversationName}\" WHERE id = @id"))
+            await using (var cmd = data.CreateCommand($"SELECT id, message, file, reply, senderid, sendername, sent FROM \"{conversationName}\" WHERE id = @id"))
             {
                 cmd.Parameters.AddWithValue("id", messageId);
                 var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
-                    return new ConversationDto
+                    return new ConversationModel
                     {
                         Id = reader.GetInt32(0),
-                        Message = reader.IsDBNull(1) ? null : reader.GetString(1),
+                        Message = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                         File = reader.IsDBNull(2) ? null : reader.GetString(2),
                         Reply = reader.IsDBNull(3) ? null : reader.GetString(3),
                         SenderId = reader.GetInt32(4),
-                        Sent = reader.GetDateTime(5)
+                        SenderName = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                        Sent = reader.GetDateTime(6)
                     };
                 }
             }
@@ -687,7 +691,7 @@ namespace DrocsidApi.Managers
         public async Task<bool> CreateConversation(Guid conversationName)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sent TIMESTAMP)"))
+            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sendername TEXT, sent TIMESTAMP)"))
             {
                 await cmd.ExecuteNonQueryAsync();
                 return true;
@@ -704,30 +708,58 @@ namespace DrocsidApi.Managers
             }
         }
 
-        public async Task<LatestMessageDto> GetLatestMessage(Guid conversationName, DateTime latestMessageDateTime)
+        public async Task<List<ConversationModel>> GetLatestMessage(Guid conversationName, DateTime latestMessageDateTime)
         {
-            await CheckAndCreateConversation(conversationName);
-
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand($"SELECT MAX(sent) FROM \"{conversationName}\" WHERE sent > @latestMessageDateTime"))
+            await using (var cmd = data.CreateCommand($"SELECT id, message, file, reply, senderid, sendername, sent FROM \"{conversationName}\" WHERE sent > @latestMessageDateTime"))
             {
+                var messages = new List<ConversationModel>();
                 cmd.Parameters.AddWithValue("latestMessageDateTime", latestMessageDateTime);
-                var result = await cmd.ExecuteScalarAsync();
-
-                if (result == null || result == DBNull.Value)
+                var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
                 {
-                    return new LatestMessageDto
+                    messages.Add(new ConversationModel
                     {
-                        Id = conversationName,
-                        LatestMessageDateTime = latestMessageDateTime
+                        Id = reader.GetInt32(0),
+                        Message = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                        File = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        Reply = reader.IsDBNull(3) ? null : reader.GetString(3),
+                        SenderId = reader.GetInt32(4),
+                        SenderName = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                        Sent = reader.GetDateTime(6)
+                    });
+                }
+                return messages;
+            }
+        }
+
+        public async Task<bool> IsThisLatestMessage(Guid conversationName, int id)
+        {
+            await using var data = NpgsqlDataSource.Create(connectionString);
+            await using (var cmd = data.CreateCommand($"SELECT sent FROM \"{conversationName}\" ORDER BY DESC id LIMIT 1"))
+            {
+                var result = await cmd.ExecuteScalarAsync();
+                var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var model = new ConversationModel
+                    {
+                        Id = reader.GetInt32(0),
+                        Message = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                        File = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        Reply = reader.IsDBNull(3) ? null : reader.GetString(3),
+                        SenderId = reader.GetInt32(4),
+                        SenderName = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                        Sent = reader.GetDateTime(6)
                     };
+
+                    if (model.Id > id)
+                        return false;
+                    else
+                        return true;
                 }
 
-                return new LatestMessageDto
-                {
-                    Id = conversationName,
-                    LatestMessageDateTime = (DateTime)result
-                };
+                return true;
             }
         }
         #endregion
@@ -770,9 +802,9 @@ namespace DrocsidApi.Managers
             }
         }
 
-        public async Task<List<UsersInChatJuncDto>> GetAllUsersInChatJunc()
+        public async Task<List<UsersInChatJuncModel>> GetAllUsersInChatJunc()
         {
-            List<UsersInChatJuncDto> chatJuncs = [];
+            List<UsersInChatJuncModel> chatJuncs = [];
 
             await using var data = NpgsqlDataSource.Create(connectionString);
             await using (var cmd = data.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc"))
@@ -780,7 +812,7 @@ namespace DrocsidApi.Managers
                 var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    chatJuncs.Add(new UsersInChatJuncDto
+                    chatJuncs.Add(new UsersInChatJuncModel
                     {
                         Id = reader.GetInt32(0),
                         UserIds = ((int[])reader.GetValue(1)).ToList(),
@@ -792,7 +824,7 @@ namespace DrocsidApi.Managers
             return chatJuncs;
         }
 
-        public async Task<UsersInChatJuncDto?> GetUsersInChatJunc(int id)
+        public async Task<UsersInChatJuncModel?> GetUsersInChatJunc(int id)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
             await using (var cmd = data.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc WHERE id = @id"))
@@ -801,7 +833,7 @@ namespace DrocsidApi.Managers
                 var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
-                    return new UsersInChatJuncDto
+                    return new UsersInChatJuncModel
                     {
                         Id = reader.GetInt32(0),
                         UserIds = ((int[])reader.GetValue(1)).ToList(),
@@ -834,9 +866,9 @@ namespace DrocsidApi.Managers
             return null;
         }
 
-        public async Task<List<UsersInChatJuncDto>> GetUserChats(int userId)
+        public async Task<List<UsersInChatJuncModel>> GetUserChats(int userId)
         {
-            List<UsersInChatJuncDto> chatJuncs = [];
+            List<UsersInChatJuncModel> chatJuncs = [];
 
             await using var data = NpgsqlDataSource.Create(connectionString);
             await using (var cmd = data.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc WHERE @userId = ANY(userids)"))
@@ -845,7 +877,7 @@ namespace DrocsidApi.Managers
                 var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    chatJuncs.Add(new UsersInChatJuncDto
+                    chatJuncs.Add(new UsersInChatJuncModel
                     {
                         Id = reader.GetInt32(0),
                         UserIds = ((int[])reader.GetValue(1)).ToList(),

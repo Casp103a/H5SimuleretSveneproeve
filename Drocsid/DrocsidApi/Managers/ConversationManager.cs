@@ -1,17 +1,19 @@
-﻿using LogicLibrary.Dtos;
+﻿using DrocsidApi.Models;
+using LogicLibrary.Dtos;
 
 namespace DrocsidApi.Managers
 {
     public interface IConversationManager
     {
-        Task<bool?> SendMessageAsync(ConversationDto message, Guid conversationName);
-        Task<bool?> UpdateMessageAsync(ConversationDto message, Guid conversationName);
-        Task<bool?> DeleteMessageAsync(int messageId, Guid conversationName);
+        Task<bool> SendMessageAsync(ConversationDto message, Guid conversationName);
+        Task<bool> UpdateMessageAsync(ConversationDto message, Guid conversationName);
+        Task<bool> DeleteMessageAsync(int messageId, Guid conversationName);
         Task<List<ConversationDto>?> GetConversationMessagesAsync(Guid conversationName);
         Task<ConversationDto?> GetMessageAsync(int messageId, Guid conversationName);
-        Task<bool?> CreateConversationAsync(Guid conversationName);
-        Task<bool?> DeleteConversationAsync(Guid conversationName);
-        Task<LatestMessageDto?> GetLatestMessageAsync(Guid id, DateTime latestMessageDateTime);
+        Task<bool> CreateConversationAsync(Guid conversationName);
+        Task<bool> DeleteConversationAsync(Guid conversationName);
+        Task<List<ConversationDto>?> GetLatestMessagesAsync(Guid conversationName, DateTime latestMessageDateTime);
+        Task<bool> IsThisLatestMessageAsync(Guid conversationName, int id);
     }
 
     public class ConversationManager : IConversationManager
@@ -23,23 +25,23 @@ namespace DrocsidApi.Managers
             this.databaseManager = databaseManager;
         }
 
-        public async Task<bool?> SendMessageAsync(ConversationDto message, Guid conversationName)
+        public async Task<bool> SendMessageAsync(ConversationDto message, Guid conversationName)
         {
             try
             {
                 if (message == null || conversationName == Guid.Empty)
                 {
-                    return null;
+                    return false;
                 }
 
                 if (string.IsNullOrEmpty(message.Message))
                 {
-                    return null;
+                    return false;
                 }
 
                 if (message.SenderId <= 0)
                 {
-                    return null;
+                    return false;
                 }
 
                 message.Sent = DateTime.Now;
@@ -48,17 +50,17 @@ namespace DrocsidApi.Managers
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 
-        public async Task<bool?> UpdateMessageAsync(ConversationDto message, Guid conversationName)
+        public async Task<bool> UpdateMessageAsync(ConversationDto message, Guid conversationName)
         {
             try
             {
                 if (message == null || message.Id <= 0 || conversationName == Guid.Empty)
                 {
-                    return null;
+                    return false;
                 }
 
                 var existingMessage = await GetMessageAsync(message.Id, conversationName);
@@ -76,17 +78,17 @@ namespace DrocsidApi.Managers
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 
-        public async Task<bool?> DeleteMessageAsync(int messageId, Guid conversationName)
+        public async Task<bool> DeleteMessageAsync(int messageId, Guid conversationName)
         {
             try
             {
                 if (messageId <= 0 || conversationName == Guid.Empty)
                 {
-                    return null;
+                    return false;
                 }
 
                 var existingMessage = await GetMessageAsync(messageId, conversationName);
@@ -99,7 +101,7 @@ namespace DrocsidApi.Managers
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 
@@ -115,7 +117,23 @@ namespace DrocsidApi.Managers
 
                 var messages = await databaseManager.GetConversationMessages(conversationName);
                 await PopulateSenderNames(messages);
-                return messages;
+
+                var convertedMessages = new List<ConversationDto>();
+                foreach (var message in messages)
+                {
+                    convertedMessages.Add(new ConversationDto
+                    {
+                        Id = message.Id,
+                        Message = message.Message,
+                        File = message.File,
+                        Reply = message.Reply,
+                        SenderId = message.SenderId,
+                        SenderName = message.SenderName,
+                        Sent = message.Sent
+                    });
+                }
+
+                return convertedMessages;
             }
             catch (Exception ex)
             {
@@ -139,7 +157,19 @@ namespace DrocsidApi.Managers
                 {
                     await PopulateSenderName(message);
                 }
-                return message;
+                
+                var convertedMessage = new ConversationDto
+                {
+                    Id = message.Id,
+                    Message = message.Message,
+                    File = message.File,
+                    Reply = message.Reply,
+                    SenderId = message.SenderId,
+                    SenderName = message.SenderName,
+                    Sent = message.Sent
+                };
+
+                return convertedMessage;
             }
             catch (Exception)
             {
@@ -147,24 +177,41 @@ namespace DrocsidApi.Managers
             }
         }
 
-        public async Task<bool?> CreateConversationAsync(Guid conversationName)
+        public async Task<bool> CreateConversationAsync(Guid conversationName)
         {
             try
             {
                 if (conversationName == Guid.Empty)
                 {
-                    return null;
+                    return false;
                 }
 
                 return await databaseManager.CreateConversation(conversationName);
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 
-        public async Task<bool?> DeleteConversationAsync(Guid conversationName)
+        public async Task<bool> DeleteConversationAsync(Guid conversationName)
+        {
+            try
+            {
+                if (conversationName == Guid.Empty)
+                {
+                    return false;
+                }
+
+                return await databaseManager.DeleteConversation(conversationName);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<List<ConversationDto>?> GetLatestMessagesAsync(Guid conversationName, DateTime latestMessageDateTime)
         {
             try
             {
@@ -173,7 +220,24 @@ namespace DrocsidApi.Managers
                     return null;
                 }
 
-                return await databaseManager.DeleteConversation(conversationName);
+                var latestMessage = await databaseManager.GetLatestMessage(conversationName, latestMessageDateTime);
+
+                var convertedMessages = new List<ConversationDto>();
+                foreach (var message in latestMessage)
+                {
+                    convertedMessages.Add(new ConversationDto
+                    {
+                        Id = message.Id,
+                        Message = message.Message,
+                        File = message.File,
+                        Reply = message.Reply,
+                        SenderId = message.SenderId,
+                        SenderName = message.SenderName,
+                        Sent = message.Sent
+                    });
+                }
+
+                return convertedMessages;
             }
             catch (Exception)
             {
@@ -181,26 +245,19 @@ namespace DrocsidApi.Managers
             }
         }
 
-        public async Task<LatestMessageDto?> GetLatestMessageAsync(Guid id, DateTime latestMessageDateTime)
+        public async Task<bool> IsThisLatestMessageAsync(Guid conversationName, int id)
         {
             try
             {
-                if (id == Guid.Empty)
-                {
-                    return null;
-                }
-
-                var latestMessage = await databaseManager.GetLatestMessage(id, latestMessageDateTime);
-
-                return latestMessage;
+                return await databaseManager.IsThisLatestMessage(conversationName, id);
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 
-        private async Task PopulateSenderNames(List<ConversationDto> messages)
+        private async Task PopulateSenderNames(List<ConversationModel> messages)
         {
             if (messages == null) return;
 
@@ -210,7 +267,7 @@ namespace DrocsidApi.Managers
             }
         }
 
-        private async Task PopulateSenderName(ConversationDto message)
+        private async Task PopulateSenderName(ConversationModel message)
         {
             try
             {

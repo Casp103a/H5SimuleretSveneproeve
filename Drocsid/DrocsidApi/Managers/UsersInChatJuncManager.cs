@@ -156,7 +156,24 @@ namespace DrocsidApi.Managers
         {
             try
             {
-                return await databaseManager.GetAllUsersInChatJunc();
+                var result = await databaseManager.GetAllUsersInChatJunc();
+
+                if (result == null)
+                    return null;
+
+                var chats = new List<UsersInChatJuncDto>();
+
+                foreach (var chat in result)
+                {
+                    chats.Add(new UsersInChatJuncDto
+                    {
+                        Id = chat.Id,
+                        ConversationName = chat.ConversationName,
+                        UserIds = chat.UserIds
+                    });
+                }
+
+                return chats;
             }
             catch (Exception)
             {
@@ -173,7 +190,19 @@ namespace DrocsidApi.Managers
                     return null;
                 }
 
-                return await databaseManager.GetUsersInChatJunc(id);
+                var result = await databaseManager.GetUsersInChatJunc(id);
+
+                if (result == null)
+                    return null;
+
+                var chat = new UsersInChatJuncDto()
+                {
+                    Id = result.Id,
+                    ConversationName = result.ConversationName,
+                    UserIds = result.UserIds
+                };
+
+                return chat;
             }
             catch (Exception)
             {
@@ -207,7 +236,24 @@ namespace DrocsidApi.Managers
                     return null;
                 }
 
-                return await databaseManager.GetUserChats(userId);
+                var chats = await databaseManager.GetUserChats(userId);
+
+                if (chats == null)
+                    return null;
+
+                var convertedChats = new List<UsersInChatJuncDto>();
+
+                foreach (var chat in chats)
+                {
+                    convertedChats.Add(new UsersInChatJuncDto
+                    {
+                        Id = chat.Id,
+                        ConversationName = chat.ConversationName,
+                        UserIds = chat.UserIds
+                    });
+                }
+
+                return convertedChats;
             }
             catch (Exception)
             {
