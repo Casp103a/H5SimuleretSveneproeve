@@ -4,11 +4,11 @@ namespace DrocsidApi.Managers
 {
     public interface IUsersInChatJuncManager
     {
-        Task<bool?> CreateChatAsync(UsersInChatJuncDto chatJunc);
-        Task<bool?> UpdateChatAsync(UsersInChatJuncDto chatJunc);
-        Task<bool?> DeleteChatAsync(int id);
-        Task<bool?> AddUserToChatAsync(int userId, Guid conversationName);
-        Task<bool?> RemoveUserFromChatAsync(int userId, Guid conversationName);
+        Task<bool> CreateChatAsync(UsersInChatJuncDto chatJunc);
+        Task<bool> UpdateChatAsync(UsersInChatJuncDto chatJunc);
+        Task<bool> DeleteChatAsync(int id);
+        Task<bool> AddUserToChatAsync(int userId, Guid conversationName);
+        Task<bool> RemoveUserFromChatAsync(int userId, Guid conversationName);
         Task<List<UsersInChatJuncDto>?> GetAllChatsAsync();
         Task<UsersInChatJuncDto?> GetChatAsync(int id);
         Task<UsersInChatJuncDto?> GetChatByNameAsync(Guid conversationName);
@@ -25,13 +25,13 @@ namespace DrocsidApi.Managers
             this.databaseManager = databaseManager;
         }
 
-        public async Task<bool?> CreateChatAsync(UsersInChatJuncDto chatJunc)
+        public async Task<bool> CreateChatAsync(UsersInChatJuncDto chatJunc)
         {
             try
             {
                 if (chatJunc == null || chatJunc.UserIds == null || !chatJunc.UserIds.Any())
                 {
-                    return null;
+                    return false;
                 }
 
                 var existingChat = await GetChatByNameAsync(chatJunc.ConversationName);
@@ -44,17 +44,17 @@ namespace DrocsidApi.Managers
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 
-        public async Task<bool?> UpdateChatAsync(UsersInChatJuncDto chatJunc)
+        public async Task<bool> UpdateChatAsync(UsersInChatJuncDto chatJunc)
         {
             try
             {
                 if (chatJunc == null || chatJunc.Id <= 0)
                 {
-                    return null;
+                    return false;
                 }
 
                 var existingChat = await GetChatAsync(chatJunc.Id);
@@ -67,17 +67,17 @@ namespace DrocsidApi.Managers
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 
-        public async Task<bool?> DeleteChatAsync(int id)
+        public async Task<bool> DeleteChatAsync(int id)
         {
             try
             {
                 if (id <= 0)
                 {
-                    return null;
+                    return false;
                 }
 
                 var existingChat = await GetChatAsync(id);
@@ -90,17 +90,17 @@ namespace DrocsidApi.Managers
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 
-        public async Task<bool?> AddUserToChatAsync(int userId, Guid conversationName)
+        public async Task<bool> AddUserToChatAsync(int userId, Guid conversationName)
         {
             try
             {
                 if (userId <= 0 || conversationName == Guid.Empty)
                 {
-                    return null;
+                    return false;
                 }
 
                 var chat = await GetChatByNameAsync(conversationName);
@@ -119,17 +119,17 @@ namespace DrocsidApi.Managers
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 
-        public async Task<bool?> RemoveUserFromChatAsync(int userId, Guid conversationName)
+        public async Task<bool> RemoveUserFromChatAsync(int userId, Guid conversationName)
         {
             try
             {
                 if (userId <= 0 || conversationName == Guid.Empty)
                 {
-                    return null;
+                    return false;
                 }
 
                 var chat = await GetChatByNameAsync(conversationName);
@@ -148,7 +148,7 @@ namespace DrocsidApi.Managers
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 

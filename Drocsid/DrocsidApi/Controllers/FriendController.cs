@@ -11,12 +11,14 @@ namespace DrocsidApi.Controllers
         private readonly IFriendManager friendManager;
         private readonly IFriendRequestManager friendRequestManager;
         private readonly IUserManager userManager;
+        private readonly IUsersInChatJuncManager usersInChatJuncManager;
 
-        public FriendController(IFriendManager friendManager, IFriendRequestManager friendRequestManager, IUserManager userManager)
+        public FriendController(IFriendManager friendManager, IFriendRequestManager friendRequestManager, IUserManager userManager, IUsersInChatJuncManager usersInChatJuncManager)
         {
             this.friendManager = friendManager;
             this.friendRequestManager = friendRequestManager;
             this.userManager = userManager;
+            this.usersInChatJuncManager = usersInChatJuncManager;
         }
 
         [HttpGet("GetUserFriendRequest")]
@@ -59,6 +61,18 @@ namespace DrocsidApi.Controllers
                 
                 if (!result)
                     return Ok("Failed while trying to clean up friend request");
+
+                var junc = new UsersInChatJuncDto()
+                {
+                    ConversationDisplayName = "chat",
+                    ConversationName = Guid.NewGuid(),
+                    UserIds = [friendDto.User1Id, friendDto.User2Id]
+                };
+
+                result = await usersInChatJuncManager.CreateChatAsync(junc);
+
+                if (!result)
+                    return Ok("Failed to create chat");
 
                 return Ok("Success while adding friend and cleaning");
             }
