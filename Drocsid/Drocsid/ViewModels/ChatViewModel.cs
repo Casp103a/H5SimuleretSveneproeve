@@ -59,7 +59,7 @@ namespace Drocsid.ViewModels
                 Message = Message,
                 SenderId = userInfoService.CurrentUser.Id,
                 SenderName = userInfoService.CurrentUser.Username!,
-                Sent = DateTime.Now,
+                Sent = DateTime.Now
             };
 
             var updateMessage = new UpdateMessageDto()
@@ -76,7 +76,8 @@ namespace Drocsid.ViewModels
 
             if (result.IsSuccessStatusCode)
             {
-                chats.Add(conversation);
+                Chats.Add(conversation);
+                Message = string.Empty;
             }
             else
             {
@@ -85,22 +86,22 @@ namespace Drocsid.ViewModels
             }
         }
 
-        private async Task<ObservableCollection<ConversationDto>> FetchChat()
+        private ObservableCollection<ConversationDto> FetchChat()
         {
             string endPoint = $"/api/chat/getConversationMessages?conversationId={chat.Id}";
 
-            var result = await httpClientService.GetAsync(endPoint);
+            var result = httpClientService.GetAsync(endPoint).GetAwaiter().GetResult();
 
             if (result.IsSuccessStatusCode)
             {
-                var content = await result.Content.ReadAsStringAsync();
-                var chats = JsonSerializer.Deserialize<ObservableCollection<ConversationDto>>(content);
+                var content = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var chats = JsonSerializer.Deserialize<ObservableCollection<ConversationDto>>(content, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
                 if(chats != null)
                     return chats;
             }
             else
             {
-                var error = await result.Content.ReadAsStringAsync();
+                var error = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
@@ -124,7 +125,7 @@ namespace Drocsid.ViewModels
             if (content != null && content is UsersInChatJuncDto chat)
                 this.chat = chat;
 
-            chats = FetchChat().GetAwaiter().GetResult();
+            Chats = FetchChat();
         }
         #endregion
     }

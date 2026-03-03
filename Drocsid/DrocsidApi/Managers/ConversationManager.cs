@@ -32,7 +32,7 @@ namespace DrocsidApi.Managers
                     return null;
                 }
 
-                if (string.IsNullOrEmpty(message.Message) && string.IsNullOrEmpty(message.File))
+                if (string.IsNullOrEmpty(message.Message))
                 {
                     return null;
                 }
@@ -42,7 +42,7 @@ namespace DrocsidApi.Managers
                     return null;
                 }
 
-                message.Sent = DateTime.UtcNow;
+                message.Sent = DateTime.Now;
 
                 return await databaseManager.SendMessage(message, conversationName);
             }
@@ -109,6 +109,7 @@ namespace DrocsidApi.Managers
             {
                 if (conversationName == Guid.Empty)
                 {
+                    Console.WriteLine("Conversation name is empty");
                     return null;
                 }
 
@@ -116,8 +117,10 @@ namespace DrocsidApi.Managers
                 await PopulateSenderNames(messages);
                 return messages;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
                 return null;
             }
         }

@@ -12,11 +12,11 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
-            <RowDefinition Height="0.15*"/>
+            <RowDefinition Height="0.2*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
-            <ColumnDefinition Width="0.1*"/>
+            <ColumnDefinition Width="0.11*"/>
         </Grid.ColumnDefinitions>
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Grid.ColumnSpan="2">
             <ItemsControl ItemsSource="{Binding Chats}">
@@ -29,9 +29,9 @@
                             </Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal">
                                 <Label Content="{Binding SenderName}" FontSize="14"/>
-                                <Label Content="{Binding Sent}" FontSize="8"/>
+                                <Label Content="{Binding Sent}" FontSize="8" VerticalAlignment="Bottom"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding Message}" FontSize="12"/>
+                            <TextBlock Text="{Binding Message}" FontSize="12" Grid.Row="1"/>
                         </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

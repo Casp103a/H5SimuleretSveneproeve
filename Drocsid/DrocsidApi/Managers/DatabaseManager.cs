@@ -575,7 +575,7 @@ namespace DrocsidApi.Managers
         private async Task CreateConversationTable(Guid conversationName)
         {
             await using var data = NpgsqlDataSource.Create(connectionString);
-            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS {conversationName} (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sent TIMESTAMP)"))
+            await using (var cmd = data.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sent TIMESTAMP)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
