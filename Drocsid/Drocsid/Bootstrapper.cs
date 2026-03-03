@@ -1,4 +1,5 @@
 ﻿using Drocsid.Dialogs.Views;
+using Drocsid.Factory;
 using Drocsid.Messages.Events;
 using Drocsid.Service;
 using Drocsid.Views;
@@ -35,6 +36,8 @@ namespace Drocsid
             container.RegisterSingleton<IUserInfoService, UserInfoService>();
             container.RegisterScoped<ILoginService, LoginService>();
             container.RegisterScoped<IPasswordService, PasswordService>();
+            container.RegisterSingleton<IApiPollerFactory, ApiPollerFactory>();
+            container.RegisterSingleton<IApiPollerCoordinatorService, ApiPollerCoordinatorService>();
         }
 
         public void Dispose()

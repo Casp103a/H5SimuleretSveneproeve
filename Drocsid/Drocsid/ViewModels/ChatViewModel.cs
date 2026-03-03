@@ -1,4 +1,5 @@
-﻿using Drocsid.Service;
+﻿using Drocsid.Messages.Events;
+using Drocsid.Service;
 using LogicLibrary.Dtos;
 using LogicLibrary.Services;
 using System.Collections.ObjectModel;
@@ -13,11 +14,16 @@ namespace Drocsid.ViewModels
     {
         private readonly IHttpClientService httpClientService;
         private readonly IUserInfoService userInfoService;
+        private readonly IEventAggregator eventAggregator;
 
-        public ChatViewModel(IHttpClientService httpClientService, IUserInfoService userInfoService)
+        public ChatViewModel(IHttpClientService httpClientService, IUserInfoService userInfoService, IEventAggregator eventAggregator)
         {
             this.httpClientService = httpClientService;
             this.userInfoService = userInfoService;
+            this.eventAggregator = eventAggregator;
+
+            this.eventAggregator.GetEvent<DisposeEvent>().Subscribe(Dispose);
+            this.eventAggregator.GetEvent<ChatGotNewMessagesEvent>().Subscribe(GotNewMessages);
 
             SendCommand = new DelegateCommand(Send);
         }
@@ -95,8 +101,8 @@ namespace Drocsid.ViewModels
             if (result.IsSuccessStatusCode)
             {
                 var content = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                var chats = JsonSerializer.Deserialize<ObservableCollection<ConversationDto>>(content, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
-                if(chats != null)
+                var chats = JsonSerializer.Deserialize<ObservableCollection<ConversationDto>>(content, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                if (chats != null)
                     return chats;
             }
             else
@@ -106,6 +112,40 @@ namespace Drocsid.ViewModels
             }
 
             return [];
+        }
+
+        private void GotNewMessages(ChatGotNewMessageArgs args)
+        {
+            if (args.ChatId != chat.Id)
+                return;
+
+            string endPoint = $"/api/chat/getLatestMessage?id={chat.Id}&Conversation={args.ChatGuid}";
+
+            var result = httpClientService.GetAsync(endPoint).GetAwaiter().GetResult();
+
+            if (result.IsSuccessStatusCode)
+            {
+                var content = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var chats = JsonSerializer.Deserialize<ObservableCollection<ConversationDto>>(content, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                if (chats == null)
+                    return;
+
+                foreach (var chat in chats)
+                {
+                    Chats.Add(chat);
+                }
+            }
+            else
+            {
+                var error = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void Dispose()
+        {
+            eventAggregator.GetEvent<ChatGotNewMessagesEvent>().Unsubscribe(GotNewMessages);
+            eventAggregator.GetEvent<DisposeEvent>().Unsubscribe(Dispose);
         }
 
         #region navigation

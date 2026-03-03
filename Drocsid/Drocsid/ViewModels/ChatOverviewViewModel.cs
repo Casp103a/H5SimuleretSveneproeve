@@ -1,4 +1,5 @@
 ﻿using Drocsid.Dialogs.Views;
+using Drocsid.Factory;
 using Drocsid.Messages.Events;
 using Drocsid.Service;
 using Drocsid.Views;
@@ -17,14 +18,18 @@ namespace Drocsid.ViewModels
         private readonly IEventAggregator eventAggregator;
         private readonly IUserInfoService userInfoService;
         private readonly IHttpClientService httpClientService;
+        private readonly IApiPollerCoordinatorService coordinatorService;
 
-        public ChatOverviewViewModel(IRegionManager regionManager, IDialogService dialogService, IEventAggregator eventAggregator, IUserInfoService userInfoService, IHttpClientService httpClientService)
+        public ChatOverviewViewModel(IRegionManager regionManager, IDialogService dialogService,
+            IEventAggregator eventAggregator, IUserInfoService userInfoService, IHttpClientService httpClientService,
+            IApiPollerCoordinatorService coordinatorService)
         {
             this.regionManager = regionManager;
             this.dialogService = dialogService;
             this.eventAggregator = eventAggregator;
             this.userInfoService = userInfoService;
             this.httpClientService = httpClientService;
+            this.coordinatorService = coordinatorService;
 
             AddFriendCommand = new DelegateCommand(AddFriend);
             LogoutCommand = new DelegateCommand(Logout);
@@ -134,6 +139,19 @@ namespace Drocsid.ViewModels
         {
             GreetUser = "Hi " + userInfoService.CurrentUser?.Username;
             ListOfChats = GetChats();
+
+            foreach (var chat in listOfChats)
+            {
+                var config = new PollerConfig()
+                {
+                    ChatId = chat.Id,
+                    PollerId = chat.ConversationName,
+                    Interval = new TimeSpan(),
+                    Url = $"/api/getIsThisLatestMessage?id={chat.Id}&conversationName={chat.ConversationName}"
+                };
+
+                coordinatorService.CreateAndStartPoller(config);
+            }
         }
         #endregion
     }
