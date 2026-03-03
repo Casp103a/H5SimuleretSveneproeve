@@ -30,9 +30,6 @@ namespace DrocsidApi.Controllers
 
             var result = await usersInChatJuncManager.CreateChatAsync(chatJunc);
 
-            if (result == null)
-                return BadRequest("Invalid chat data");
-
             if (result == false)
                 return Conflict("Chat already exists");
 
@@ -51,9 +48,6 @@ namespace DrocsidApi.Controllers
                 return BadRequest("Valid chat data with ID is required");
 
             var result = await usersInChatJuncManager.UpdateChatAsync(chatJunc);
-
-            if (result == null)
-                return BadRequest("Invalid chat data");
 
             if (result == false)
                 return NotFound("Chat not found");
@@ -225,9 +219,6 @@ namespace DrocsidApi.Controllers
 
             var result = await conversationManager.SendMessageAsync(actionMessageDto.Conversation, actionMessageDto.UsersInChatJunc.ConversationName);
 
-            if (result == null)
-                return BadRequest("Invalid message data");
-
             if (result == false)
                 return StatusCode(500, "Failed to send message");
 
@@ -245,9 +236,6 @@ namespace DrocsidApi.Controllers
 
             var result = await conversationManager.UpdateMessageAsync(actionMessageDto.Conversation, actionMessageDto.UsersInChatJunc.ConversationName);
 
-            if (result == null)
-                return BadRequest("Invalid message data");
-
             if (result == false)
                 return BadRequest("Message not found or unauthorized");
 
@@ -264,9 +252,6 @@ namespace DrocsidApi.Controllers
                 return BadRequest("Valid conversation name and message ID are required");
 
             var result = await conversationManager.DeleteMessageAsync(usersJuncDto.Id, usersJuncDto.ConversationName);
-
-            if (result == null)
-                return BadRequest("Invalid request data");
 
             if (result == false)
                 return NotFound("Message not found");
@@ -362,9 +347,6 @@ namespace DrocsidApi.Controllers
 
             var result = await conversationManager.CreateConversationAsync(conversationDto.ConversationName);
 
-            if (result == null)
-                return BadRequest("Invalid conversation name");
-
             if (result == false)
                 return StatusCode(500, "Failed to create conversation");
 
@@ -382,7 +364,7 @@ namespace DrocsidApi.Controllers
 
             var result = await conversationManager.DeleteConversationAsync(conversationDto.ConversationName);
 
-            if (result == null)
+            if (result == false)
                 return BadRequest("Invalid conversation name");
 
             return Ok();
