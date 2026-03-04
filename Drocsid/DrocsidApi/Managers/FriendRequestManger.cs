@@ -26,9 +26,7 @@ namespace DrocsidApi.Managers
             var friendModel = new FriendRequestModel()
             {
                 SenderId = friendRequest.SenderId,
-                SenderUsername = friendRequest.SenderUsername,
                 ReceiverId = friendRequest.ReceiverId,
-                ReceiverUsername = friendRequest.ReceiverUsername
             };
 
             return databaseManager.AddFriendRequest(friendModel);
@@ -40,9 +38,7 @@ namespace DrocsidApi.Managers
             {
                 Id = friendRequest.Id,
                 SenderId = friendRequest.SenderId,
-                SenderUsername = friendRequest.SenderUsername,
                 ReceiverId = friendRequest.ReceiverId,
-                ReceiverUsername = friendRequest.ReceiverUsername
             };
 
             return await databaseManager.RemoveFriendRequest(friendModel);
@@ -55,7 +51,13 @@ namespace DrocsidApi.Managers
 
             foreach (var friendRequest in friendRequests)
             {
-                var dto = new FriendRequestDto(friendRequest.Id, friendRequest.SenderId, friendRequest.SenderUsername, friendRequest.ReceiverId, friendRequest.ReceiverUsername);
+                var sender = await databaseManager.GetUser(friendRequest.SenderId);
+                var receiver = await databaseManager.GetUser(friendRequest.ReceiverId);
+
+                if (sender == null && receiver == null)
+                    return result;
+
+                var dto = new FriendRequestDto(friendRequest.Id, friendRequest.SenderId, sender.Username!, friendRequest.ReceiverId, receiver.Username!);
                 result.Add(dto);
             }
 
@@ -69,7 +71,13 @@ namespace DrocsidApi.Managers
 
             foreach (var friendRequest in friendRequests)
             {
-                var dto = new FriendRequestDto(friendRequest.Id, friendRequest.SenderId, friendRequest.SenderUsername, friendRequest.ReceiverId, friendRequest.ReceiverUsername);
+                var sender = await databaseManager.GetUser(friendRequest.SenderId);
+                var receiver = await databaseManager.GetUser(friendRequest.ReceiverId);
+
+                if (sender == null && receiver == null)
+                    return result;
+
+                var dto = new FriendRequestDto(friendRequest.Id, friendRequest.SenderId, sender.Username!, friendRequest.ReceiverId, receiver.Username!);
                 result.Add(dto);
             }
 
@@ -82,7 +90,7 @@ namespace DrocsidApi.Managers
 
             if (friendRequest != null)
                 return true;
-            else 
+            else
                 return false;
         }
     }

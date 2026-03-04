@@ -46,7 +46,17 @@ namespace DrocsidApi.Managers
 
                 message.Sent = DateTime.Now;
 
-                return await databaseManager.SendMessage(message, conversationName);
+                var model = new ConversationModel()
+                {
+                    Id = message.Id,
+                    File = message.File,
+                    SenderId = message.SenderId,
+                    Message = message.Message,
+                    Reply = message.Reply,
+                    Sent = message.Sent
+                };
+
+                return await databaseManager.SendMessage(model, conversationName);
             }
             catch (Exception)
             {
@@ -69,12 +79,27 @@ namespace DrocsidApi.Managers
                     return false;
                 }
 
+                if (string.IsNullOrEmpty(message.Message))
+                {
+                    return false;
+                }
+
                 if (existingMessage.SenderId != message.SenderId)
                 {
                     return false;
                 }
 
-                return await databaseManager.UpdateMessage(message, conversationName);
+                var model = new ConversationModel()
+                {
+                    Id = message.Id,
+                    File = message.File,
+                    SenderId = message.SenderId,
+                    Message = message.Message,
+                    Reply = message.Reply,
+                    Sent = message.Sent
+                };
+
+                return await databaseManager.UpdateMessage(model, conversationName);
             }
             catch (Exception)
             {
@@ -116,11 +141,15 @@ namespace DrocsidApi.Managers
                 }
 
                 var messages = await databaseManager.GetConversationMessages(conversationName);
-                await PopulateSenderNames(messages);
 
                 var convertedMessages = new List<ConversationDto>();
                 foreach (var message in messages)
                 {
+                    var sender = await databaseManager.GetUser(message.SenderId);
+
+                    if (sender == null)
+                        continue;
+
                     convertedMessages.Add(new ConversationDto
                     {
                         Id = message.Id,
@@ -128,7 +157,7 @@ namespace DrocsidApi.Managers
                         File = message.File,
                         Reply = message.Reply,
                         SenderId = message.SenderId,
-                        SenderName = message.SenderName,
+                        SenderName = sender.Username!,
                         Sent = message.Sent
                     });
                 }
@@ -153,11 +182,14 @@ namespace DrocsidApi.Managers
                 }
 
                 var message = await databaseManager.GetMessage(messageId, conversationName);
-                if (message != null)
-                {
-                    await PopulateSenderName(message);
-                }
-                
+                if (message == null)
+                    return null;
+
+                var sender = await databaseManager.GetUser(message.SenderId);
+
+                if (sender == null)
+                    return null;
+
                 var convertedMessage = new ConversationDto
                 {
                     Id = message.Id,
@@ -165,7 +197,7 @@ namespace DrocsidApi.Managers
                     File = message.File,
                     Reply = message.Reply,
                     SenderId = message.SenderId,
-                    SenderName = message.SenderName,
+                    SenderName = sender.Username!,
                     Sent = message.Sent
                 };
 
@@ -225,6 +257,11 @@ namespace DrocsidApi.Managers
                 var convertedMessages = new List<ConversationDto>();
                 foreach (var message in latestMessage)
                 {
+                    var sender = await databaseManager.GetUser(message.SenderId);
+
+                    if (sender == null)
+                        continue;
+
                     convertedMessages.Add(new ConversationDto
                     {
                         Id = message.Id,
@@ -232,7 +269,7 @@ namespace DrocsidApi.Managers
                         File = message.File,
                         Reply = message.Reply,
                         SenderId = message.SenderId,
-                        SenderName = message.SenderName,
+                        SenderName = sender.Username!,
                         Sent = message.Sent
                     });
                 }
@@ -254,29 +291,6 @@ namespace DrocsidApi.Managers
             catch (Exception)
             {
                 return false;
-            }
-        }
-
-        private async Task PopulateSenderNames(List<ConversationModel> messages)
-        {
-            if (messages == null) return;
-
-            foreach (var message in messages)
-            {
-                await PopulateSenderName(message);
-            }
-        }
-
-        private async Task PopulateSenderName(ConversationModel message)
-        {
-            try
-            {
-                var user = await databaseManager.GetUser(message.SenderId);
-                message.SenderName = user?.Username ?? "Unknown User";
-            }
-            catch (Exception)
-            {
-                message.SenderName = "Unknown User";
             }
         }
     }

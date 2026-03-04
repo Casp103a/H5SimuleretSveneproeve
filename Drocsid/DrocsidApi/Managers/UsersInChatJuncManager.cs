@@ -1,4 +1,5 @@
-﻿using LogicLibrary.Dtos;
+﻿using DrocsidApi.Models;
+using LogicLibrary.Dtos;
 
 namespace DrocsidApi.Managers
 {
@@ -40,7 +41,15 @@ namespace DrocsidApi.Managers
                     return false;
                 }
 
-                return await databaseManager.AddUsersInChatJunc(chatJunc);
+                var model = new UsersInChatJuncModel()
+                {
+                    Id = chatJunc.Id,
+                    ConversationDisplayName = chatJunc.ConversationDisplayName!,
+                    ConversationName = chatJunc.ConversationName,
+                    UserIds = chatJunc.UserIds
+                };
+
+                return await databaseManager.AddUsersInChatJunc(model);
             }
             catch (Exception)
             {
@@ -63,7 +72,15 @@ namespace DrocsidApi.Managers
                     return false;
                 }
 
-                return await databaseManager.UpdateUsersInChatJunc(chatJunc);
+                var model = new UsersInChatJuncModel()
+                {
+                    Id = chatJunc.Id,
+                    ConversationDisplayName = chatJunc.ConversationDisplayName!,
+                    ConversationName = chatJunc.ConversationName,
+                    UserIds = chatJunc.UserIds
+                };
+
+                return await databaseManager.UpdateUsersInChatJunc(model);
             }
             catch (Exception)
             {
@@ -221,7 +238,20 @@ namespace DrocsidApi.Managers
                     return null;
                 }
 
-                return await databaseManager.GetUsersInChatJuncByName(conversationName);
+                var result = await databaseManager.GetUsersInChatJuncByName(conversationName);
+
+                if (result == null)
+                    return null;
+
+                var dto = new UsersInChatJuncDto()
+                {
+                    Id = result.Id,
+                    ConversationName = result.ConversationName,
+                    ConversationDisplayName = result.ConversationDisplayName,
+                    UserIds = result.UserIds
+                };
+
+                return dto;
             }
             catch (Exception)
             {

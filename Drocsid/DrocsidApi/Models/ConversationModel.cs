@@ -13,8 +13,6 @@ namespace DrocsidApi.Models
         [Required]
         public int SenderId { get; set; }
         [Required]
-        public string SenderName { get; set; }
-        [Required]
         public DateTime Sent { get; set; }
     }
 }
