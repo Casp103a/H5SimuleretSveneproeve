@@ -17,6 +17,8 @@ namespace Drocsid.Factory
         private IHttpClientService httpClientService;
         private IEventAggregator eventAggregator;
 
+        public Task RunAsync(CancellationToken ct) => ExecuteAsync(ct);
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             using var timer = new PeriodicTimer(config.Interval);

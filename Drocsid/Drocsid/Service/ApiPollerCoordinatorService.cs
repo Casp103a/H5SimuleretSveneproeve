@@ -26,7 +26,8 @@ namespace Drocsid.Service
         public void CreateAndStartPoller(PollerConfig config)
         {
             var poller = factory.Create(config);
-            poller.StartAsync(cancellationToken.Token);
+            if (poller is ChatApiPoller chat)
+                chat.RunAsync(cancellationToken.Token);
             chatApiPollers.Add(poller);
         }
 

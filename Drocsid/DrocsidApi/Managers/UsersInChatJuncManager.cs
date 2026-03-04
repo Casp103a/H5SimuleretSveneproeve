@@ -169,6 +169,7 @@ namespace DrocsidApi.Managers
                     {
                         Id = chat.Id,
                         ConversationName = chat.ConversationName,
+                        ConversationDisplayName = chat.ConversationDisplayName,
                         UserIds = chat.UserIds
                     });
                 }
@@ -199,6 +200,7 @@ namespace DrocsidApi.Managers
                 {
                     Id = result.Id,
                     ConversationName = result.ConversationName,
+                    ConversationDisplayName = result.ConversationDisplayName,
                     UserIds = result.UserIds
                 };
 
@@ -249,6 +251,7 @@ namespace DrocsidApi.Managers
                     {
                         Id = chat.Id,
                         ConversationName = chat.ConversationName,
+                        ConversationDisplayName = chat.ConversationDisplayName,
                         UserIds = chat.UserIds
                     });
                 }
