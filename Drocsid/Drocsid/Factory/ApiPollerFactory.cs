@@ -1,11 +1,10 @@
 ﻿using LogicLibrary.Services;
-using Microsoft.Extensions.Hosting;
 
 namespace Drocsid.Factory
 {
     internal interface IApiPollerFactory
     {
-        BackgroundService Create(PollerConfig config);
+        ChatApiPoller Create(PollerConfig config);
     }
 
     internal class ApiPollerFactory : IApiPollerFactory
@@ -19,7 +18,7 @@ namespace Drocsid.Factory
             this.httpClientService = httpClientService;
         }
 
-        public BackgroundService Create(PollerConfig config)
+        public ChatApiPoller Create(PollerConfig config)
         {
             return new ChatApiPoller(config, eventAggregator, httpClientService);
         }

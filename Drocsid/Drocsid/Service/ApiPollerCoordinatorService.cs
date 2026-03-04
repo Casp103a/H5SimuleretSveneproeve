@@ -1,5 +1,4 @@
 ﻿using Drocsid.Factory;
-using Microsoft.Extensions.Hosting;
 
 namespace Drocsid.Service
 {
@@ -21,13 +20,13 @@ namespace Drocsid.Service
         }
 
         private CancellationTokenSource cancellationToken;
-        private List<BackgroundService> chatApiPollers;
+        private List<ChatApiPoller> chatApiPollers;
 
         public void CreateAndStartPoller(PollerConfig config)
         {
             var poller = factory.Create(config);
             if (poller is ChatApiPoller chat)
-                chat.RunAsync(cancellationToken.Token);
+                Task.Run(() =>  chat.RunAsync(cancellationToken.Token));
             chatApiPollers.Add(poller);
         }
 

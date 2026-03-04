@@ -1,10 +1,9 @@
 ﻿using Drocsid.Messages.Events;
 using LogicLibrary.Services;
-using Microsoft.Extensions.Hosting;
 
 namespace Drocsid.Factory
 {
-    internal class ChatApiPoller : BackgroundService
+    internal class ChatApiPoller
     {
         public ChatApiPoller(PollerConfig config, IEventAggregator eventAggregator, IHttpClientService httpClientService)
         {
@@ -19,7 +18,7 @@ namespace Drocsid.Factory
 
         public Task RunAsync(CancellationToken ct) => ExecuteAsync(ct);
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        private async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             using var timer = new PeriodicTimer(config.Interval);
 
