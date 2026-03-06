@@ -62,9 +62,16 @@ namespace DrocsidApi.Controllers
                 if (!result)
                     return Ok("Failed while trying to clean up friend request");
 
+                var user1 = await userManager.GetUser(friendRequest.SenderId);
+                var user2 = await userManager.GetUser(friendRequest.ReceiverId);
+
+                string chatName = "Chat";
+                if (user1 != null && user2 != null)
+                    chatName = $"{user1.Username} & {user2.Username}";
+
                 var junc = new UsersInChatJuncDto()
                 {
-                    ConversationDisplayName = "chat",
+                    ConversationDisplayName = chatName,
                     ConversationName = Guid.NewGuid(),
                     UserIds = [friendDto.User1Id, friendDto.User2Id]
                 };
