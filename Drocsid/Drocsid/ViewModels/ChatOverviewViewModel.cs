@@ -146,8 +146,8 @@ namespace Drocsid.ViewModels
                 {
                     ChatId = chat.Id,
                     PollerId = chat.ConversationName,
-                    Interval = new TimeSpan(),
-                    Url = $"/api/getIsThisLatestMessage?id={chat.Id}&conversationName={chat.ConversationName}"
+                    Interval = new TimeSpan(0,0,30),
+                    Url = $"/api/chat/getIsThisLatestMessage?id={chat.Id}&conversationName={chat.ConversationName}"
                 };
 
                 coordinatorService.CreateAndStartPoller(config);

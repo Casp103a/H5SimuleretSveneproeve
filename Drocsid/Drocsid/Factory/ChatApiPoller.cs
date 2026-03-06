@@ -1,5 +1,6 @@
 ﻿using Drocsid.Messages.Events;
 using LogicLibrary.Services;
+using System.Windows;
 
 namespace Drocsid.Factory
 {
@@ -38,7 +39,8 @@ namespace Drocsid.Factory
                         ChatId = config.ChatId
                     };
 
-                    eventAggregator.GetEvent<ChatGotNewMessagesEvent>().Publish(args);
+                    Application.Current.Dispatcher.Invoke(() => eventAggregator.GetEvent<ChatGotNewMessagesEvent>().Publish(args));
+                    
 
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
