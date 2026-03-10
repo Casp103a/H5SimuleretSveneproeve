@@ -1,4 +1,5 @@
 ﻿using Drocsid.Messages.Events;
+using Drocsid.Messages.Query;
 using Drocsid.Service;
 using LogicLibrary.Dtos;
 using LogicLibrary.Services;
@@ -24,6 +25,7 @@ namespace Drocsid.ViewModels
 
             this.eventAggregator.GetEvent<DisposeEvent>().Subscribe(Dispose);
             this.eventAggregator.GetEvent<ChatGotNewMessagesEvent>().Subscribe(GotNewMessages);
+            this.eventAggregator.GetEvent<GetLatestMessageQuery>().Subscribe(GetLatestMessage);
 
             SendCommand = new DelegateCommand(Send);
         }
@@ -119,7 +121,7 @@ namespace Drocsid.ViewModels
             if (args.ChatId != chat.Id)
                 return;
 
-            string endPoint = $"/api/chat/getLatestMessage?id={chat.Id}&Conversation={args.ChatGuid}";
+            string endPoint = $"/api/chat/getLatestMessage?id={Chats.Last().Id}&Conversation={args.ChatGuid}";
 
             var result = httpClientService.GetAsync(endPoint).GetAwaiter().GetResult();
 
@@ -142,9 +144,20 @@ namespace Drocsid.ViewModels
             }
         }
 
+        private void GetLatestMessage(GetLatestMessageQueryArgs args)
+        {
+            if (args.ChatId != chat.Id)
+                return;
+
+            args.Message = Chats.Last();
+
+            return;
+        }
+
         private void Dispose()
         {
             eventAggregator.GetEvent<ChatGotNewMessagesEvent>().Unsubscribe(GotNewMessages);
+            eventAggregator.GetEvent<GetLatestMessageQuery>().Unsubscribe(GetLatestMessage);
             eventAggregator.GetEvent<DisposeEvent>().Unsubscribe(Dispose);
         }
 

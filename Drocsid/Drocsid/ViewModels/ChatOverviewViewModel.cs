@@ -132,7 +132,8 @@ namespace Drocsid.ViewModels
 
         public void OnNavigatedFrom(NavigationContext navigationContext)
         {
-
+            coordinatorService.CancelPollers();
+            listOfChats.Clear();
         }
 
         public void OnNavigatedTo(NavigationContext navigationContext)
@@ -147,7 +148,7 @@ namespace Drocsid.ViewModels
                     ChatId = chat.Id,
                     PollerId = chat.ConversationName,
                     Interval = new TimeSpan(0,0,30),
-                    Url = $"/api/chat/getIsThisLatestMessage?id={chat.Id}&conversationName={chat.ConversationName}"
+                    Url = "/api/chat/getIsThisLatestMessage?id={0}&conversationName="+$"{chat.ConversationName}"
                 };
 
                 coordinatorService.CreateAndStartPoller(config);

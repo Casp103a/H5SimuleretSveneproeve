@@ -288,8 +288,10 @@ namespace DrocsidApi.Managers
             {
                 return await databaseManager.IsThisLatestMessage(conversationName, id);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
                 return false;
             }
         }

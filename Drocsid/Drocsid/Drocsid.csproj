@@ -6,7 +6,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>Drocsid-logo.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Drocsid-logo.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Prism.Core" Version="9.0.537" />

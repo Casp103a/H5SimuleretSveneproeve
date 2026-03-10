@@ -33,6 +33,7 @@ namespace Drocsid.Service
         public void CancelPollers()
         {
             cancellationToken.Cancel();
+            chatApiPollers.Clear();
         }
     }
 }

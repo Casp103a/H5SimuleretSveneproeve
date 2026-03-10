@@ -683,7 +683,7 @@ namespace DrocsidApi.Managers
                         Sent = reader.GetDateTime(5)
                     };
 
-                    if (model.Id > id)
+                    if (model.Id < id)
                         return false;
                     else
                         return true;

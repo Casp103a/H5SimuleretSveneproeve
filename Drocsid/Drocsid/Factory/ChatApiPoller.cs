@@ -1,4 +1,5 @@
 ﻿using Drocsid.Messages.Events;
+using Drocsid.Messages.Query;
 using LogicLibrary.Services;
 using System.Windows;
 
@@ -27,12 +28,26 @@ namespace Drocsid.Factory
             {
                 try
                 {
-                    var response = await httpClientService.GetAsync(config.Url, stoppingToken);
+                    var arg = new GetLatestMessageQueryArgs()
+                    {
+                        ChatId = config.ChatId,
+                        ConversationName = config.PollerId
+                    };
+
+                    eventAggregator.GetEvent<GetLatestMessageQuery>().Publish(arg);
+
+                    var response = await httpClientService.GetAsync(String.Format(config.Url, arg.Message.Id), stoppingToken);
                     response.EnsureSuccessStatusCode();
 
                     var content = await response.Content.ReadAsStringAsync(stoppingToken);
+                    var cloudConvert = bool.TryParse(content, out var result);
+                    
+                    if (!cloudConvert)
+                        continue;
 
-                    // Or raise an event / call a handler
+                    if (!result)
+                        continue;
+
                     var args = new ChatGotNewMessageArgs()
                     {
                         ChatGuid = config.PollerId,
