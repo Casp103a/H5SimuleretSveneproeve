@@ -215,7 +215,7 @@ namespace DrocsidApi.Managers
 
         private async Task CreateRefreshTokenTable()
         {
-            await using (var cmd = dataSource.CreateCommand("CREATE TABLE IF NOT EXISTS refreshtokens (id uuid PRIMARY KEY, userId INT NOT NULL, token TEXT NOT NULL, expires TIMESTAMP NOT NULL, hasBeenUsed BOOLEAN NOT NULL)"))
+            await using (var cmd = dataSource.CreateCommand("CREATE TABLE IF NOT EXISTS refreshtokens (id uuid PRIMARY KEY, userId INT NOT NULL REFERENCES users(id), token TEXT NOT NULL, expires TIMESTAMP NOT NULL, hasBeenUsed BOOLEAN NOT NULL)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -301,7 +301,7 @@ namespace DrocsidApi.Managers
 
         private async Task CreateFriendRequestTable()
         {
-            await using (var cmd = dataSource.CreateCommand("CREATE TABLE IF NOT EXISTS friendrequests (id SERIAL PRIMARY KEY, senderId INT NOT NULL, receiverId INT NOT NULL)"))
+            await using (var cmd = dataSource.CreateCommand("CREATE TABLE IF NOT EXISTS friendrequests (id SERIAL PRIMARY KEY, senderId INT NOT NULL REFERENCES users(id), receiverId INT NOT NULL REFERENCES users(id))"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -402,7 +402,7 @@ namespace DrocsidApi.Managers
 
         private async Task CreateFriendsTable()
         {
-            await using (var cmd = dataSource.CreateCommand("CREATE TABLE IF NOT EXISTS friends (id SERIAL PRIMARY KEY, user1Id INT NOT NULL, user2Id INT NOT NULL)"))
+            await using (var cmd = dataSource.CreateCommand("CREATE TABLE IF NOT EXISTS friends (id SERIAL PRIMARY KEY, user1Id INT NOT NULL REFERENCES users(id), user2Id INT NOT NULL REFERENCES users(id))"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -522,7 +522,7 @@ namespace DrocsidApi.Managers
 
         private async Task CreateConversationTable(Guid conversationName)
         {
-            await using (var cmd = dataSource.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sent TIMESTAMP)"))
+            await using (var cmd = dataSource.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT REFERENCES users(id), sent TIMESTAMP)"))
             {
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -627,7 +627,7 @@ namespace DrocsidApi.Managers
 
         public async Task<bool> CreateConversation(Guid conversationName)
         {
-            await using (var cmd = dataSource.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT, sent TIMESTAMP)"))
+            await using (var cmd = dataSource.CreateCommand($"CREATE TABLE IF NOT EXISTS \"{conversationName}\" (id SERIAL PRIMARY KEY, message TEXT, file TEXT, reply TEXT, senderid INT REFERENCES users(id), sent TIMESTAMP)"))
             {
                 await cmd.ExecuteNonQueryAsync();
                 return true;
