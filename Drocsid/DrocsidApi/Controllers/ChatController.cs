@@ -1,5 +1,6 @@
 ﻿using DrocsidApi.Managers;
 using LogicLibrary.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DrocsidApi.Controllers
@@ -19,6 +20,7 @@ namespace DrocsidApi.Controllers
 
         #region Chat Management
 
+        [Authorize]
         [HttpPost("createChat")]
         public async Task<IActionResult> CreateChat([FromBody] UsersInChatJuncDto chatJunc)
         {
@@ -38,6 +40,7 @@ namespace DrocsidApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpPut("updateChat")]
         public async Task<IActionResult> UpdateChat([FromBody] UsersInChatJuncDto chatJunc)
         {
@@ -55,6 +58,7 @@ namespace DrocsidApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpDelete("deleteChat")]
         public async Task<IActionResult> DeleteChat([FromQuery] int id)
         {
@@ -78,6 +82,7 @@ namespace DrocsidApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpGet("getAllChats")]
         public async Task<IActionResult> GetAllChats()
         {
@@ -92,6 +97,7 @@ namespace DrocsidApi.Controllers
             return Ok(chats);
         }
 
+        [Authorize]
         [HttpGet("getChat")]
         public async Task<IActionResult> GetChat([FromQuery] int id)
         {
@@ -109,6 +115,7 @@ namespace DrocsidApi.Controllers
             return Ok(chat);
         }
 
+        [Authorize]
         [HttpGet("getChatByName")]
         public async Task<IActionResult> GetChatByName([FromBody] UsersInChatJuncDto usersInChatJuncDto)
         {
@@ -126,6 +133,7 @@ namespace DrocsidApi.Controllers
             return Ok(chat);
         }
 
+        [Authorize]
         [HttpGet("getUserChats")]
         public async Task<IActionResult> GetUserChats([FromQuery] int userId)
         {
@@ -147,6 +155,7 @@ namespace DrocsidApi.Controllers
 
         #region Participant Management
 
+        [Authorize]
         [HttpPost("addUserToChat")]
         public async Task<IActionResult> AddUserToChat([FromBody] SendRemoveUserFromChatDto sendRemove)
         {
@@ -167,6 +176,7 @@ namespace DrocsidApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpDelete("removeUserFromChat")]
         public async Task<IActionResult> RemoveUserFromChat([FromBody] SendRemoveUserFromChatDto sendRemove)
         {
@@ -187,6 +197,7 @@ namespace DrocsidApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpGet("getChatParticipants")]
         public async Task<IActionResult> GetChatParticipants([FromBody] UsersInChatJuncDto usersJuncDto)
         {
@@ -208,6 +219,7 @@ namespace DrocsidApi.Controllers
 
         #region Message Management
 
+        [Authorize]
         [HttpPost("sendMessage")]
         public async Task<IActionResult> SendMessage([FromBody] UpdateMessageDto actionMessageDto)
         {
@@ -225,6 +237,7 @@ namespace DrocsidApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpPut("updateMessage")]
         public async Task<IActionResult> UpdateMessage([FromBody] UpdateMessageDto actionMessageDto)
         {
@@ -241,7 +254,8 @@ namespace DrocsidApi.Controllers
 
             return Ok();
         }
-
+        
+        [Authorize]
         [HttpDelete("deleteMessage")]
         public async Task<IActionResult> DeleteMessage([FromBody] UsersInChatJuncDto usersJuncDto)
         {
@@ -259,6 +273,7 @@ namespace DrocsidApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpGet("getConversationMessages")]
         public async Task<IActionResult> GetConversationMessages([FromQuery] int conversationId)
         {
@@ -280,6 +295,7 @@ namespace DrocsidApi.Controllers
             return Ok(messages);
         }
 
+        [Authorize]
         [HttpGet("getMessage")]
         public async Task<IActionResult> GetMessage([FromBody] UsersInChatJuncDto usersJuncDto)
         {
@@ -297,6 +313,7 @@ namespace DrocsidApi.Controllers
             return Ok(message);
         }
 
+        [Authorize]
         [HttpGet("getLatestMessage")]
         public async Task<IActionResult> GetLatestMessage([FromQuery] int id, [FromQuery] Guid Conversation)
         {
@@ -318,6 +335,7 @@ namespace DrocsidApi.Controllers
             return Ok(latestMessage);
         }
 
+        [Authorize]
         [HttpGet("getIsThisLatestMessage")]
         public async Task<IActionResult> GetIsThisLatestMessage([FromQuery] int id, [FromQuery] Guid conversationName)
         {
@@ -336,6 +354,7 @@ namespace DrocsidApi.Controllers
 
         #region Conversation Management
 
+        [Authorize]
         [HttpPost("createConversation")]
         public async Task<IActionResult> CreateConversation([FromBody] UsersInChatJuncDto conversationDto)
         {
@@ -353,6 +372,7 @@ namespace DrocsidApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpDelete("deleteConversation")]
         public async Task<IActionResult> DeleteConversation([FromBody] UsersInChatJuncDto conversationDto)
         {
