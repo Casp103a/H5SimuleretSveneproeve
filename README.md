@@ -211,32 +211,3 @@ docker-compose logs -f api docker-compose logs -f postgres
 
 ### Update containers
 docker-compose pull docker-compose up -d
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 📞 Support
-
-For support or questions, please open an issue in the GitHub repository.
-
-## 🔧 Troubleshooting
-
-### Common Issues
-- **Port conflicts**: Ensure ports 5000 (API) and 5432 (PostgreSQL) are available
-- **ARM64 compatibility**: Use `--platform linux/arm64` when building for Raspberry Pi
-- **Memory issues**: Monitor RAM usage on Raspberry Pi during peak loads
-- **Database connection**: Verify PostgreSQL container is healthy before starting API
-
-### Performance Optimization
-- Use external SSD storage for better I/O performance
-- Configure PostgreSQL settings for Raspberry Pi hardware
-- Monitor container resource usage with `docker stats`
