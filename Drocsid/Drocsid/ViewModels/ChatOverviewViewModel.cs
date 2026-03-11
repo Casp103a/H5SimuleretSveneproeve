@@ -134,6 +134,7 @@ namespace Drocsid.ViewModels
         {
             coordinatorService.CancelPollers();
             listOfChats.Clear();
+            regionManager.RequestNavigate("chat", string.Empty); //todo fix so the chat disapper then you leave the view.
         }
 
         public void OnNavigatedTo(NavigationContext navigationContext)
