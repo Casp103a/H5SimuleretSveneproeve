@@ -1,5 +1,6 @@
 ﻿using DrocsidApi.Managers;
 using LogicLibrary.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DrocsidApi.Controllers
@@ -21,6 +22,7 @@ namespace DrocsidApi.Controllers
             this.usersInChatJuncManager = usersInChatJuncManager;
         }
 
+        [Authorize]
         [HttpGet("GetUserFriendRequest")]
         public async Task<IActionResult> GetUserFriendRequest([FromQuery] int userId)
         {
@@ -41,6 +43,7 @@ namespace DrocsidApi.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPost("Accept")]
         public async Task<IActionResult> AcceptFriendRequest([FromBody] FriendRequestDto friendRequest)
         {
@@ -87,6 +90,7 @@ namespace DrocsidApi.Controllers
                 return BadRequest();
         }
 
+        [Authorize]
         [HttpPost("Reject")]
         public async Task<IActionResult> RejectFriendRequest([FromBody] FriendRequestDto friendRequest)
         {
@@ -101,6 +105,7 @@ namespace DrocsidApi.Controllers
                 return BadRequest();
         }
 
+        [Authorize]
         [HttpPost("Create")]
         public async Task<IActionResult> CreateFriendRequest([FromBody] AddFriendRequestDto addFriendRequest)
         {
