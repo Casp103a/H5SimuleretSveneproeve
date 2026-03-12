@@ -134,10 +134,12 @@ namespace Drocsid.ViewModels
         {
             coordinatorService.CancelPollers();
             listOfChats.Clear();
+            regionManager.RequestNavigate("chat", nameof(EmptyView));
         }
 
         public void OnNavigatedTo(NavigationContext navigationContext)
         {
+            regionManager.RequestNavigate("chat", nameof(EmptyView));
             GreetUser = "Hi " + userInfoService.CurrentUser?.Username;
             ListOfChats = GetChats();
 
