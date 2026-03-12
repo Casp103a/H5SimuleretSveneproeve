@@ -20,7 +20,7 @@
         </Grid.ColumnDefinitions>
         <StackPanel Orientation="Horizontal" Margin="0">
             <Button Content="Logout" Width="100" HorizontalAlignment="Left" Command="{Binding LogoutCommand}"/>
-            <Label Content="{Binding GreetUser}" Margin="5,0,0,0"/>
+            <Label Content="{Binding GreetUser}" Margin="5,0,0,0" VerticalAlignment="Center"/>
         </StackPanel>
         <Button Content="Add friend" Grid.Column="1" Width="125" HorizontalAlignment="Right" Command="{Binding AddFriendCommand}"/>
         <Button Content="View friend requests" Grid.Column="2" HorizontalAlignment="Left" Command="{Binding ViewFriendRequestCommand}"/>
