@@ -50,12 +50,21 @@ namespace DrocsidApi.Managers
 
     internal class DatabaseManager : IDatabaseManager, IDisposable
     {
-        private readonly string connectionString = "Host=drocsid-db;Port=5432;Username=Flemming;Password=NogetJegKanHuske;Database=drocsid;";
+        private readonly string connectionString;
         private readonly NpgsqlDataSource dataSource;
+        private readonly IConfiguration configurationManager;
 
-        public DatabaseManager()
+        public DatabaseManager(IConfiguration configurationManager)
         {
-            dataSource = NpgsqlDataSource.Create(connectionString);
+            this.configurationManager = configurationManager;
+            var conn = this.configurationManager.GetConnectionString("connectionString");
+            if (conn != null)
+                connectionString = conn;
+
+            if (connectionString != null)
+                dataSource = NpgsqlDataSource.Create(connectionString);
+            else
+                return;
             SetupDatabase().Wait();
         }
 
