@@ -47,6 +47,8 @@ namespace DrocsidApi
             builder.Services.AddScoped<IFriendRequestManager, FriendRequestManger>();
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IPasswordService, PasswordService>();
+            builder.Services.AddScoped<IConversationManager, ConversationManager>();
+            builder.Services.AddScoped<IUsersInChatJuncManager, UsersInChatJuncManager>();
 
             var app = builder.Build();
 

@@ -31,7 +31,7 @@ namespace Drocsid
 
         public Action<string?> SaveTokenInSecureStorage => SaveToken;
 
-        public string? BaseUrl => "http://192.168.10.25:8080";
+        public string? BaseUrl => "https://drocsid.exploit4all.com";
 
         public string GetToken()
         {

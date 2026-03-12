@@ -9,6 +9,7 @@ namespace LogicLibrary.Services
         Task<HttpResponseMessage> PutAsync(string endpoint, HttpContent httpContent, string? baseurl = null);
         Task<HttpResponseMessage> DeleteAsync(string endpoint, string? baseurl = null);
         Task<HttpResponseMessage> GetAsync(string endpoint, string? baseurl = null);
+        Task<HttpResponseMessage> GetAsync(string endpoint, CancellationToken cancellationToken, string? baseurl = null);
     }
 
     public class HttpClientService : IHttpClientService, IDisposable
@@ -40,6 +41,13 @@ namespace LogicLibrary.Services
             string url = baseurl ?? applicationSpecific.BaseUrl!;
             url += endpoint;
             return httpClient.GetAsync(url);
+        }
+
+        public Task<HttpResponseMessage> GetAsync(string endpoint, CancellationToken cancellationToken, string? baseurl = null)
+        {
+            string url = baseurl ?? applicationSpecific.BaseUrl!;
+            url += endpoint;
+            return httpClient.GetAsync(url, cancellationToken);
         }
 
         public Task<HttpResponseMessage> PostAsync(string endpoint, HttpContent httpContent, string? baseurl = null)

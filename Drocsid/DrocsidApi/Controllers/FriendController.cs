@@ -1,5 +1,6 @@
 ﻿using DrocsidApi.Managers;
 using LogicLibrary.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DrocsidApi.Controllers
@@ -11,14 +12,17 @@ namespace DrocsidApi.Controllers
         private readonly IFriendManager friendManager;
         private readonly IFriendRequestManager friendRequestManager;
         private readonly IUserManager userManager;
+        private readonly IUsersInChatJuncManager usersInChatJuncManager;
 
-        public FriendController(IFriendManager friendManager, IFriendRequestManager friendRequestManager, IUserManager userManager)
+        public FriendController(IFriendManager friendManager, IFriendRequestManager friendRequestManager, IUserManager userManager, IUsersInChatJuncManager usersInChatJuncManager)
         {
             this.friendManager = friendManager;
             this.friendRequestManager = friendRequestManager;
             this.userManager = userManager;
+            this.usersInChatJuncManager = usersInChatJuncManager;
         }
 
+        [Authorize]
         [HttpGet("GetUserFriendRequest")]
         public async Task<IActionResult> GetUserFriendRequest([FromQuery] int userId)
         {
@@ -39,6 +43,7 @@ namespace DrocsidApi.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPost("Accept")]
         public async Task<IActionResult> AcceptFriendRequest([FromBody] FriendRequestDto friendRequest)
         {
@@ -60,12 +65,32 @@ namespace DrocsidApi.Controllers
                 if (!result)
                     return Ok("Failed while trying to clean up friend request");
 
+                var user1 = await userManager.GetUser(friendRequest.SenderId);
+                var user2 = await userManager.GetUser(friendRequest.ReceiverId);
+
+                string chatName = "Chat";
+                if (user1 != null && user2 != null)
+                    chatName = $"{user1.Username} & {user2.Username}";
+
+                var junc = new UsersInChatJuncDto()
+                {
+                    ConversationDisplayName = chatName,
+                    ConversationName = Guid.NewGuid(),
+                    UserIds = [friendDto.User1Id, friendDto.User2Id]
+                };
+
+                result = await usersInChatJuncManager.CreateChatAsync(junc);
+
+                if (!result)
+                    return Ok("Failed to create chat");
+
                 return Ok("Success while adding friend and cleaning");
             }
             else
                 return BadRequest();
         }
 
+        [Authorize]
         [HttpPost("Reject")]
         public async Task<IActionResult> RejectFriendRequest([FromBody] FriendRequestDto friendRequest)
         {
@@ -80,6 +105,7 @@ namespace DrocsidApi.Controllers
                 return BadRequest();
         }
 
+        [Authorize]
         [HttpPost("Create")]
         public async Task<IActionResult> CreateFriendRequest([FromBody] AddFriendRequestDto addFriendRequest)
         {

@@ -1,0 +1,285 @@
+# To deploy run this command
+# kubectl apply -f MockKubernetes/drocsid-api-kubernetes.yaml
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: drocsid
+---
+# ConfigMap for application settings
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: drocsid-api-config
+  namespace: drocsid
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ConnectionStrings__DefaultConnection: "Server=drocsid-db-service;Database=DrocsidDb;User Id=drocsid_user;Password=placeholder;"
+  Logging__LogLevel__Default: "Information"
+  AllowedHosts: "*"
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: drocsid-api-secrets
+  namespace: drocsid
+type: Opaque
+data:
+  # Base64 encoded values - replace with actual encoded secrets
+  ConnectionString: U2VydmVyPWRyb2NzaWQtZGItc2VydmljZTtEYXRhYmFzZT1Ecm9jc2lkRGI7VXNlciBJZD1kcm9jc2lkX3VzZXI7UGFzc3dvcmQ9eW91cl9wYXNzd29yZDtUcnVzdFNlcnZlckNlcnRpZmljYXRlPXRydWU=
+  JwtSecretKey: eW91cl9qd3Rfc2VjcmV0X2tleV9oZXJl
+---
+# Deployment for the API
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drocsid-api
+  namespace: drocsid
+  labels:
+    app: drocsid-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: drocsid-api
+  template:
+    metadata:
+      labels:
+        app: drocsid-api
+    spec:
+      containers:
+      - name: drocsid-api
+        image: drocsid-api:latest  # Replace with your actual image
+        ports:
+        - containerPort: 8080
+        - containerPort: 8081
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: drocsid-api-config
+              key: ASPNETCORE_ENVIRONMENT
+        - name: ASPNETCORE_URLS
+          value: "http://+:8080;https://+:8081"
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: drocsid-api-secrets
+              key: ConnectionString
+        - name: JwtSettings__SecretKey
+          valueFrom:
+            secretKeyRef:
+              name: drocsid-api-secrets
+              key: JwtSecretKey
+        envFrom:
+        - configMapRef:
+            name: drocsid-api-config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# Service for the API
+apiVersion: v1
+kind: Service
+metadata:
+  name: drocsid-api-service
+  namespace: drocsid
+  labels:
+    app: drocsid-api
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 8081
+    protocol: TCP
+  selector:
+    app: drocsid-api
+---
+# Database Deployment (PostgreSQL example)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drocsid-db
+  namespace: drocsid
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drocsid-db
+  template:
+    metadata:
+      labels:
+        app: drocsid-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "DrocsidDb"
+        - name: POSTGRES_USER
+          value: "drocsid_user"
+        - name: POSTGRES_PASSWORD
+          value: "your_password"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+---
+# PersistentVolumeClaim for database
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: drocsid
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# Service for the database
+apiVersion: v1
+kind: Service
+metadata:
+  name: drocsid-db-service
+  namespace: drocsid
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: drocsid-db
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: drocsid-api-ingress
+  namespace: drocsid
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - api.drocsid.com  # Replace with your domain
+    secretName: drocsid-tls
+  rules:
+  - host: api.drocsid.com  # Replace with your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: drocsid-api-service
+            port:
+              number: 80
+---
+# HorizontalPodAutoscaler for API scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: drocsid-api-hpa
+  namespace: drocsid
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: drocsid-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+# NetworkPolicy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: drocsid-network-policy
+  namespace: drocsid
+spec:
+  podSelector:
+    matchLabels:
+      app: drocsid-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+  - from:
+    - podSelector:
+        matchLabels:
+          app: drocsid-api
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: drocsid-db
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to: [] # Allow all outbound traffic for external APIs
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

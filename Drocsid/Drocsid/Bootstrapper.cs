@@ -1,4 +1,5 @@
 ﻿using Drocsid.Dialogs.Views;
+using Drocsid.Factory;
 using Drocsid.Messages.Events;
 using Drocsid.Service;
 using Drocsid.Views;
@@ -26,6 +27,8 @@ namespace Drocsid
             container.RegisterForNavigation<RegisterUserView>(nameof(RegisterUserView));
             container.RegisterForNavigation<ChatOverviewView>(nameof(ChatOverviewView));
             container.RegisterForNavigation<FriendRequestView>(nameof(FriendRequestView));
+            container.RegisterForNavigation<ChatView>(nameof(ChatView));
+            container.RegisterForNavigation<EmptyView>(nameof(EmptyView));
 
             container.RegisterDialog<AddFriendDialog>(nameof(AddFriendDialog));
 
@@ -34,6 +37,8 @@ namespace Drocsid
             container.RegisterSingleton<IUserInfoService, UserInfoService>();
             container.RegisterScoped<ILoginService, LoginService>();
             container.RegisterScoped<IPasswordService, PasswordService>();
+            container.RegisterSingleton<IApiPollerFactory, ApiPollerFactory>();
+            container.RegisterSingleton<IApiPollerCoordinatorService, ApiPollerCoordinatorService>();
         }
 
         public void Dispose()

@@ -24,9 +24,9 @@
                            helpers:PasswordBoxHelper.BoundPassword="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                            MinWidth="300"/>
                 
-                <CheckBox Content="Remember me" 
+                <!--<CheckBox Content="Remember me" 
                          IsChecked="{Binding RememberMe}" 
-                         Margin="0,16,0,0"/>
+                         Margin="0,16,0,0"/>-->
                 
                 <Button Content="Login" 
                         Command="{Binding LoginCommand}" 

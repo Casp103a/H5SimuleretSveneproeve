@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Drocsid.Views"
+             xmlns:dtos="clr-namespace:LogicLibrary.Dtos;assembly=LogicLibrary"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True"
              mc:Ignorable="d" 
@@ -19,9 +20,25 @@
         </Grid.ColumnDefinitions>
         <StackPanel Orientation="Horizontal" Margin="0">
             <Button Content="Logout" Width="100" HorizontalAlignment="Left" Command="{Binding LogoutCommand}"/>
-            <Label Content="{Binding GreetUser}" Margin="5,0,0,0"/>
+            <Label Content="{Binding GreetUser}" Margin="5,0,0,0" VerticalAlignment="Center"/>
         </StackPanel>
         <Button Content="Add friend" Grid.Column="1" Width="125" HorizontalAlignment="Right" Command="{Binding AddFriendCommand}"/>
         <Button Content="View friend requests" Grid.Column="2" HorizontalAlignment="Left" Command="{Binding ViewFriendRequestCommand}"/>
+
+        <ListBox Grid.Row="1" Background="Transparent" SelectionMode="Single" ItemsSource="{Binding ListOfChats}" SelectedItem="{Binding SelectedChat}">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="dtos:UsersInChatJuncDto">
+                    <Grid>
+                        <Label Content="{Binding ConversationDisplayName}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Remove friend" Command="" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </ListBox.ContextMenu>
+        </ListBox>
+        <ContentControl prism:RegionManager.RegionName="chat" Grid.Row="1" Grid.Column="1"></ContentControl>
     </Grid>
 </UserControl>
