@@ -134,11 +134,12 @@ namespace Drocsid.ViewModels
         {
             coordinatorService.CancelPollers();
             listOfChats.Clear();
-            regionManager.RequestNavigate("chat", string.Empty); //todo fix so the chat disapper then you leave the view.
+            regionManager.RequestNavigate("chat", nameof(EmptyView));
         }
 
         public void OnNavigatedTo(NavigationContext navigationContext)
         {
+            regionManager.RequestNavigate("chat", nameof(EmptyView));
             GreetUser = "Hi " + userInfoService.CurrentUser?.Username;
             ListOfChats = GetChats();
 
