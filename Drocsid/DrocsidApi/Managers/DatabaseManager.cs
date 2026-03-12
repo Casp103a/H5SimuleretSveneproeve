@@ -145,7 +145,7 @@ namespace DrocsidApi.Managers
 
             await using (var cmd = dataSource.CreateCommand("SELECT id, username, password, isActive, refreshTokenId FROM users"))
             {
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     users.Add(new UserModel
@@ -166,7 +166,7 @@ namespace DrocsidApi.Managers
             await using (var cmd = dataSource.CreateCommand("SELECT id, username, password, isActive, refreshTokenId FROM users WHERE username = @username"))
             {
                 cmd.Parameters.AddWithValue("username", username);
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
                     return new UserModel
@@ -190,7 +190,7 @@ namespace DrocsidApi.Managers
             await using (var cmd = dataSource.CreateCommand("SELECT id, username, password, isActive, refreshTokenId FROM users WHERE id = @id"))
             {
                 cmd.Parameters.AddWithValue("id", id);
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
                     return new UserModel
@@ -236,7 +236,7 @@ namespace DrocsidApi.Managers
 
             await using (var cmd = dataSource.CreateCommand("SELECT id, userId, token, expires, hasBeenUsed FROM refreshtokens"))
             {
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     refreshTokens.Add(new RefreshTokens
@@ -334,7 +334,7 @@ namespace DrocsidApi.Managers
 
             await using (var cmd = dataSource.CreateCommand("SELECT id, senderId, receiverId FROM friendrequests"))
             {
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     friendRequests.Add(new FriendRequestModel
@@ -375,7 +375,7 @@ namespace DrocsidApi.Managers
             {
                 cmd.Parameters.AddWithValue("senderId", senderId);
                 cmd.Parameters.AddWithValue("receiverId", receiverId);
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     return new FriendRequestModel
@@ -478,7 +478,7 @@ namespace DrocsidApi.Managers
             await using (var cmd = dataSource.CreateCommand("SELECT id, user1Id, user2Id FROM friends WHERE user1Id = @id"))
             {
                 cmd.Parameters.AddWithValue("id", userId);
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     friends.Add(new FriendModel
@@ -584,7 +584,7 @@ namespace DrocsidApi.Managers
 
             await using (var cmd = dataSource.CreateCommand($"SELECT id, message, file, reply, senderid, sent FROM \"{conversationName}\" ORDER BY sent ASC"))
             {
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     messages.Add(new ConversationModel
@@ -608,7 +608,7 @@ namespace DrocsidApi.Managers
             await using (var cmd = dataSource.CreateCommand($"SELECT id, message, file, reply, senderid, sent FROM \"{conversationName}\" WHERE id = @id"))
             {
                 cmd.Parameters.AddWithValue("id", messageId);
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
                     return new ConversationModel
@@ -649,7 +649,7 @@ namespace DrocsidApi.Managers
             {
                 var messages = new List<ConversationModel>();
                 cmd.Parameters.AddWithValue("latestMessageDateTime", latestMessageDateTime);
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     messages.Add(new ConversationModel
@@ -670,7 +670,7 @@ namespace DrocsidApi.Managers
         {
             await using (var cmd = dataSource.CreateCommand($"SELECT id, message, file, reply, senderid, sent FROM \"{conversationName}\" ORDER BY id DESC LIMIT 1"))
             {
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
                     var model = new ConversationModel
@@ -753,7 +753,7 @@ namespace DrocsidApi.Managers
 
             await using (var cmd = dataSource.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc"))
             {
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     chatJuncs.Add(new UsersInChatJuncModel
@@ -773,7 +773,7 @@ namespace DrocsidApi.Managers
             await using (var cmd = dataSource.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc WHERE id = @id"))
             {
                 cmd.Parameters.AddWithValue("id", id);
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
                     return new UsersInChatJuncModel
@@ -793,7 +793,7 @@ namespace DrocsidApi.Managers
             await using (var cmd = dataSource.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc WHERE conversationname = @conversationname"))
             {
                 cmd.Parameters.AddWithValue("conversationname", conversationName);
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
                     return new UsersInChatJuncModel
@@ -815,7 +815,7 @@ namespace DrocsidApi.Managers
             await using (var cmd = dataSource.CreateCommand("SELECT id, userids, conversationname, conversationdisplayname FROM users_in_chat_junc WHERE @userId = ANY(userids)"))
             {
                 cmd.Parameters.AddWithValue("userId", userId);
-                var reader = await cmd.ExecuteReaderAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     chatJuncs.Add(new UsersInChatJuncModel
